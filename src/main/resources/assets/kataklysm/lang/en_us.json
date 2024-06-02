@@ -1,0 +1,15 @@
+{
+  "itemGroup.kataklysm": "Kataklysm",
+
+  "block.kataklysm.well": "Well of Singularities",
+  "block.kataklysm.anchor": "Discorder",
+  "block.kataklysm.solar": "Miniature Sunshine",
+
+  "container.kataklysm.anchor": "Discorder",
+
+  "chat.kataklysm.anchor.not_enough_energy": "§cNot enough energy to teleport",
+  "chat.kataklysm.anchor.not_enough_space": "§4Not enough space to teleport to",
+
+  "kataklysm.page.solar": "$(item)The miniature sunshine$(0) is a amulet that brings daylight into the world. When $(thing)Mana$(0) is supplied to this block in $(thing)Mana bursts$(0) or $(thing)Sparks$(0), $(item)blocks$(0) and $(item)entities$(0) throughout the chunk will ignore the current time, $(thing)dimension$(0), and begin to behave as if it were daytime now. Furthermore, the corresponding objects, such as some $(item)blocks$(0) in the $(#00aaee)Mekanism$(0), will perform at a stronger capability than during daytime.",
+  "kataklysm.page.solar.crafting": "What if there are two in the same chunk? $(br)$(#ff0000)IT IS TRULY AN ART!"
+}

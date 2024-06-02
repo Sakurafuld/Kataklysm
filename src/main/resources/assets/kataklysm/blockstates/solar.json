@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "enabled=true": {"model": "kataklysm:block/solar_enabled"},
+    "enabled=false": {"model": "kataklysm:block/solar_disabled"}
+  }
+}

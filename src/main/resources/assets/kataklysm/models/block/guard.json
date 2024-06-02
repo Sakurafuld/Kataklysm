@@ -1,0 +1,20 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"texture_size": [32, 32],
+	"textures": {
+		"6": "kataklysm:block/guard",
+		"particle": "kataklysm:block/well_chute"
+	},
+	"elements": [
+		{
+			"name": "guard",
+			"from": [2, 15.1, 2],
+			"to": [14, 15.11, 14],
+			"faces": {
+				"up": {"uv": [16, 16, 0, 0], "texture": "#6", "cullface": "up"},
+				"down": {"uv": [6, 0, 0, 6], "texture": "#6"}
+			}
+		}
+	]
+}
