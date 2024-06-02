@@ -4,7 +4,7 @@ import com.google.common.base.Predicates;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.sakurafuld.kataklysm.common.capability.SolarChunkProvider;
 import com.sakurafuld.kataklysm.common.init.ModBlockEntities;
-import com.sakurafuld.kataklysm.common.intergration.block.BlockEntityWithBotania;
+import com.sakurafuld.kataklysm.common.compat.block.BlockEntityWithBotania;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;

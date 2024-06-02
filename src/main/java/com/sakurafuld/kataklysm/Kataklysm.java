@@ -43,7 +43,7 @@ public class Kataklysm {
         bus.addListener(this::onRegisterCapability);
         ModItems.ITEMS.register(bus);
         ModBlocks.BLOCKS.register(bus);
-        ModBlockEntities.TYPES.register(bus);
+        ModBlockEntities.BLOCK_ENTITIES.register(bus);
         ModMenus.MENUS.register(bus);
     }
     public void commonSetup(FMLCommonSetupEvent event){
