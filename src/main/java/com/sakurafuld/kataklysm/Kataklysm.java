@@ -43,6 +43,7 @@ public class Kataklysm {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC, "kataklysm.toml");
         //コミットできてるかな？.
         //コミットできてるかな？2.
+        //コミットできてるかな？3.
     }
 
     public void commonSetup(FMLCommonSetupEvent event) {
