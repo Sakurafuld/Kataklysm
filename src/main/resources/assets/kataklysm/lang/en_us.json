@@ -1,0 +1,39 @@
+{
+  "itemGroup.kataklysm": "Kataklysm",
+
+  "item.kataklysm.laser": "Nano Laser",
+  "item.kataklysm.bow": "MekaArm Bow",
+  "item.kataklysm.oneness_touch": "Marker Ⅲ",
+
+  "module.kataklysm.arrow_speed": "Arrow Speed Multiplier",
+  "module.kataklysm.arrow_speed_unit": "Arrow Speed Unit",
+  "description.kataklysm.arrow_speed_unit": "Increases arrow speed by a multiplier",
+  "module.kataklysm.arrow_speed_overlay": "Speed:",
+
+  "module.kataklysm.aim_adjustment": "Inaccuracy",
+  "module.kataklysm.aim_adjustment_unit": "Aim Adjustment Unit",
+  "description.kataklysm.aim_adjustment_unit": "Adjusts inaccuracy",
+
+  "module.kataklysm.barrage": "Subarrow Count",
+  "module.kataklysm.barrage_unit": "Barrage Unit",
+  "description.kataklysm.barrage_unit": "Multishot with Subarrows",
+  "module.kataklysm.barrage_overlay": "Subarrow:",
+
+  "block.kataklysm.well": "Well of Singularities",
+  "block.kataklysm.anchor": "Discorder",
+  "block.kataklysm.solar": "Miniature Sunshine",
+  "block.kataklysm.oneness": "Hopper Oneness",
+
+
+  "entity.kataklysm.arrow": "Meka Arrow",
+
+  "container.kataklysm.anchor": "Discorder",
+
+  "chat.kataklysm.anchor.not_enough_energy": "§cNot enough energy to teleport",
+  "chat.kataklysm.anchor.not_enough_space": "§4Not enough space to teleport to",
+
+  "kataklysm.page.solar": "$(item)The miniature sunshine$(0) is a amulet that brings daylight into the world. When $(thing)Mana$(0) is supplied to this block in a $(thing)Mana Burst$(0) or a $(thing)Spark$(0), $(item)Blocks$(0) and $(item)Entities$(0) throughout the chunk will ignore the current time, $(thing)Dimension$(0), and begin to behave as if\n it were daytime now. Furthermore, the corresponding objects, such as some blocks in the $(#00aaee)Mekanism$(0), will perform at a stronger capability than during daytime.",
+  "kataklysm.page.solar.crafting": "What if there are two in the same chunk? $(br)$(#ff0000)IT IS TRULY AN ART!",
+
+  "info.mekanism.jei.module_installation" : "Using a Modification Station, modules can be installed on the various MekaSuit pieces, Meka-Tool and on the MekaArms."
+}

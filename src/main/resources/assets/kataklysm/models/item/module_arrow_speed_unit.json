@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "kataklysm:item/module_arrow_speed_unit"
+  }
+}

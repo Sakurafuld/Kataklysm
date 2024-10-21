@@ -1,0 +1,20 @@
+{
+  "charge_shoot": {
+    "subtitle": "kataklysm.subtitle.charge_shoot",
+    "sounds": [
+      {
+        "name": "kataklysm:charge_shoot",
+        "volume": 0.5
+      }
+    ]
+  },
+  "vanish": {
+    "subtitle": "kataklysm.subtitle.vanish",
+    "sounds": [
+      {
+        "name": "kataklysm:vanish",
+        "volume": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "itemGroup.kataklysm": "カタクリズム",
+
+  "item.kataklysm.laser": "Nano Laser",
+  "item.kataklysm.bow": "メカアームボウ",
+  "item.kataklysm.oneness_touch": "マーカーⅢ",
+
+
+  "module.kataklysm.arrow_speed": "矢の速度倍率",
+  "module.kataklysm.arrow_speed_unit": "発射速度改変ユニット",
+  "description.kataklysm.arrow_speed_unit": "矢の速度を倍率によって操作する",
+  "module.kataklysm.arrow_speed_overlay": "スピード:",
+
+  "module.kataklysm.aim_adjustment": "ブレ",
+  "module.kataklysm.aim_adjustment_unit": "エイムアジャストユニット",
+  "description.kataklysm.aim_adjustment_unit": "照準のブレを調整する",
+
+  "module.kataklysm.barrage": "サブアローの発射数",
+  "module.kataklysm.barrage_unit": "副矢連続発射ユニット",
+  "description.kataklysm.barrage_unit": "発射時に追加でサブアローを撃ち出す",
+  "module.kataklysm.barrage_overlay": "サブアロー:",
+
+
+  "block.kataklysm.well": "特異点の井戸",
+  "block.kataklysm.anchor": "ディスコーダー",
+  "block.kataklysm.solar": "日当たりの核",
+  "block.kataklysm.oneness": "ホッパーワンネス",
+
+  "entity.kataklysm.arrow": "メカアロー",
+
+  "container.kataklysm.anchor": "ディスコーダー",
+
+  "chat.kataklysm.anchor.not_enough_energy": "§cテレポートに必要なエネルギーが足りません",
+  "chat.kataklysm.anchor.not_enough_space": "§4テレポートに必要なスペースが足りません",
+
+  "kataklysm.page.solar": "$(item)日当たりの核$(0)は、世界に昼を持ち出すお守りです。このブロックは$(thing)マナバースト$(0)や$(thing)スパーク$(0)によって$(thing)マナ$(0)が供給されると、そのチャンク全体の$(item)ブロック$(0)や$(item)エンティティ$(0)が、まるで今が昼間であるかのようにふるまい始めます。さらに、$(#00aaee)メカニズム$(0)の一部のブロックなど、対応しているものは昼間時よりも強い能力を発揮します。",
+  "kataklysm.page.solar.crafting": "おなじチャンクに2つあるとどうなるでしょう?$(br)$(#ff0000)それはまさに芸術だ！",
+
+  "info.mekanism.jei.module_installation" : "改造ステーションを使用することで、MekaSuitやMeka-Tool、MekaArmにモジュールを取り付けられます。"
+}

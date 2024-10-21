@@ -1,0 +1,10 @@
+# Made in Blockbench 4.10.4
+newmtl m_c6f23fbf-4be1-813e-a4c0-6db8915a0c6a
+map_Kd kataklysm:item/bow_rib
+newmtl m_2565f26d-ca05-f4e0-d398-5c221ec5367c
+map_Kd kataklysm:item/bow_stabilizer
+newmtl m_a1248854-931d-aed8-4f09-557d3c974f5c
+map_Kd kataklysm:item/bow_string
+newmtl m_5c6f0ccf-52ae-2dfd-e51e-3c40ec454116
+map_Kd kataklysm:item/bow_arrow
+newmtl none

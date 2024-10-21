@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "com.sakurafuld.kataklysm.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "kataklysm.refmap.json",
+  "target": "@env(DEFAULT)",
+  "mixins": [
+    "mekaArm.ModuleHelperMixin",
+    "mekaArm.ServerEntityMixin",
+    "solar.AdvancedSolarGeneratorMixin",
+    "solar.DaylightDetectorMixin",
+    "solar.MobMixin",
+    "solar.MoreSolarPanelMixin",
+    "solar.SolarGeneratorMixin",
+    "solar.SolarNeutronActivatorMixin"
+  ],
+  "server": [
+  ],
+  "client": [
+    "LevelRendererMixin"
+  ],
+  "minVersion": "0.8"
+}

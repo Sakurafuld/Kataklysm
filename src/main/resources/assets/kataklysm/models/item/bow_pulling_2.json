@@ -1,0 +1,13 @@
+{
+	"parent": "kataklysm:item/bow_base",
+	"loader": "forge:obj",
+	"model": "kataklysm:models/obj/bow_pulling_2.obj",
+	"flip-v": "true",
+	"display": {
+		"firstperson_righthand": {
+			"rotation": [ 18, 12, -90 ],
+			"translation": [ 2, -1, -8 ],
+			"scale": [ 0.75, 0.75, 0.75 ]
+		}
+	}
+}

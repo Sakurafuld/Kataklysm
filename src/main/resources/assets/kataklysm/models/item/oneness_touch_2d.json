@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "kataklysm:item/oneness_touch_2d"
+  }
+}

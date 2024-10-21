@@ -1,0 +1,49 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/cube_all",
+	"texture_size": [64, 64],
+	"textures": {
+		"1": "kataklysm:block/anchor_base",
+		"2": "kataklysm:block/anchor_core",
+		"particle": "kataklysm:block/anchor_base"
+	},
+	"elements": [
+		{
+			"name": "bottom",
+			"from": [0, 0, 0],
+			"to": [16, 6, 16],
+			"faces": {
+				"north": {"uv": [8, 1.5, 12, 3], "texture": "#1", "cullface": "north"},
+				"east": {"uv": [8, 1.5, 12, 3], "texture": "#1", "cullface": "east"},
+				"south": {"uv": [8, 1.5, 12, 3], "texture": "#1", "cullface": "south"},
+				"west": {"uv": [8, 1.5, 12, 3], "texture": "#1", "cullface": "west"},
+				"up": {"uv": [4, 4, 0, 0], "texture": "#1"},
+				"down": {"uv": [4, 4, 0, 8], "texture": "#1", "cullface": "down"}
+			}
+		},
+		{
+			"name": "top",
+			"from": [0, 7, 0],
+			"to": [16, 13, 16],
+			"faces": {
+				"north": {"uv": [8, 0, 12, 1.5], "texture": "#1", "cullface": "north"},
+				"east": {"uv": [8, 0, 12, 1.5], "texture": "#1", "cullface": "east"},
+				"south": {"uv": [8, 0, 12, 1.5], "texture": "#1", "cullface": "south"},
+				"west": {"uv": [8, 0, 12, 1.5], "texture": "#1", "cullface": "west"},
+				"up": {"uv": [8, 4, 4, 0], "texture": "#1", "cullface": "up"},
+				"down": {"uv": [4, 0, 0, 4], "texture": "#1"}
+			}
+		},
+		{
+			"name": "middle",
+			"from": [2, 6, 2],
+			"to": [14, 7, 14],
+			"faces": {
+				"north": {"uv": [0, 0, 12, 1], "texture": "#2"},
+				"east": {"uv": [0, 0, 12, 1], "texture": "#2"},
+				"south": {"uv": [0, 0, 12, 1], "texture": "#2"},
+				"west": {"uv": [0, 0, 12, 1], "texture": "#2"}
+			}
+		}
+	]
+}

@@ -1,0 +1,35 @@
+{
+	"parent": "kataklysm:item/bow_base",
+	"loader": "forge:obj",
+	"model": "kataklysm:models/obj/bow_melee.obj",
+	"flip-v": "true",
+	"display": {
+		"firstperson_righthand": {
+			"rotation": [ 18, 8, -90 ],
+			"translation": [ 2, -6, -5 ],
+			"scale": [ 0.75, 0.75, 0.75 ]
+		}
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"pulling": 1
+			},
+			"model": "kataklysm:item/bow_pulling_0"
+		},
+		{
+			"predicate": {
+				"pulling": 1,
+				"pull": 0.65
+			},
+			"model": "kataklysm:item/bow_pulling_1"
+		},
+		{
+			"predicate": {
+				"pulling": 1,
+				"pull": 0.9
+			},
+			"model": "kataklysm:item/bow_pulling_2"
+		}
+	]
+}
