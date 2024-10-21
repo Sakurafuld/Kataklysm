@@ -41,7 +41,7 @@ public class Kataklysm {
         required(MEKANISM).run(() -> bus.register(new Compat.Mekanism()));
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC, "kataklysm.toml");
-
+        //コミットできてるかな？.
     }
 
     public void commonSetup(FMLCommonSetupEvent event) {
