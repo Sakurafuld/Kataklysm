@@ -50,10 +50,7 @@ import static com.sakurafuld.kataklysm.Deets.*;
 @Mod.EventBusSubscriber(modid = KATAKLYSM)
 public class AnchorHandler {
     public static final HashSet<BlockPos> ANCHORS = new HashSet<>();
-    @OnlyIn(Dist.CLIENT)
     public static final Color COLOR = new Color(0x3CFFBA);
-    @OnlyIn(Dist.CLIENT)
-    private static BakedModel anchorModel = null;
 
     public static void addAnchor(BlockPos pos){
         ANCHORS.add(pos);
@@ -263,9 +260,8 @@ public class AnchorHandler {
                             poseStack.popPose();
                         };
 
-                        if(anchorModel == null) {
-                            anchorModel = mc.getBlockRenderer().getBlockModel(ModBlocks.ANCHOR.get().defaultBlockState());
-                        }
+                        BakedModel model = mc.getBlockRenderer().getBlockModel(ModBlocks.ANCHOR.get().defaultBlockState());
+
                         Vec3 valid = getValidPos(player, pos);
                         Color color = valid == null ? Color.RED : COLOR;
 
@@ -275,7 +271,7 @@ public class AnchorHandler {
                         poseStack.scale(s, s, s);
                         poseStack.translate(-0.5, -0.5, -0.5);
 
-                        mc.getBlockRenderer().getModelRenderer().renderModel(poseStack.last(), buffer.getBuffer(RenderType.solid()), ModBlocks.ANCHOR.get().defaultBlockState(), anchorModel, 1, 1, 1, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                        mc.getBlockRenderer().getModelRenderer().renderModel(poseStack.last(), buffer.getBuffer(RenderType.solid()), ModBlocks.ANCHOR.get().defaultBlockState(), model, 1, 1, 1, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
                         LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(OutlineRenderType.BOLD_LINES), 0, 0, 0, 1, (double) 13 / 16, 1, (float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, 1);
 
                         poseStack.popPose();

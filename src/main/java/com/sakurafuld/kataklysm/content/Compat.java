@@ -20,7 +20,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
-import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -31,16 +32,16 @@ import static com.sakurafuld.kataklysm.Deets.*;
 public class Compat {
     public static class Mekanism {
         private static Mekanism INSTANCE;
-        public static Mekanism get(){
+        public static Mekanism get() {
             return INSTANCE == null ? INSTANCE = new Mekanism() : INSTANCE;
         }
+
         public final ModuleRegistryObject<ModuleArrowSpeedUnit> ARROW_SPEED =
                 new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "arrow_speed_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
         public final ModuleRegistryObject<ModuleBarrageUnit> BARRAGE =
                 new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "barrage_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
         public final ModuleRegistryObject<ModuleBarrageUnit> AIM_ADJUSTMENT =
                 new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "aim_adjustment_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
-
 
         public RegistryObject<Item> registerModuleItem(ModuleRegistryObject<?> provider){
             return ModItems.register("module_" + provider.getInternalRegistryName(),
@@ -65,31 +66,21 @@ public class Compat {
 //                Compat.Mekanism.ARROW_SPEED.updateReference(event.getRegistry());
             });
         }
+        @OnlyIn(Dist.CLIENT)
         @SubscribeEvent
         public void clientSetup(FMLClientSetupEvent event) {
             required(MEKANISM).run(() -> {
                 MenuScreens.register(ModMenus.ANCHOR.get(), AnchorScreen::new);
-                ItemProperties.register(ModItems.BOW.get(), identifier("pulling"), ((pStack, pLevel, pEntity, pSeed) -> {
-
-                    return pEntity instanceof Player && pEntity.isUsingItem() && pEntity.getUseItem().getItem() == pStack.getItem() && pStack.getOrCreateTag().getBoolean("Selected") ? 1 : 0;
-                }));
-                ItemProperties.register(ModItems.BOW.get(), identifier("pull"), ((pStack, pLevel, pEntity, pSeed) -> {
-//                if(player.isShiftKeyDown())
-//                    LOG.debug("{}-Enull={}-Uing={}-Eq={}-Dura={}-Remai={}", side(), pEntity != null, pEntity.isUsingItem(), !pEntity.getUseItem().getItem().shouldCauseReequipAnimation(pEntity.getUseItem(), pStack, false), pStack.getUseDuration(), pEntity.getUseItemRemainingTicks());
-                    return pEntity instanceof Player && pEntity.isUsingItem() && pEntity.getUseItem().getItem() == pStack.getItem() && pStack.getOrCreateTag().getBoolean("Selected") ? (pStack.getUseDuration() - pEntity.getUseItemRemainingTicks()) / 20f : 0;
-                }));
+                ItemProperties.register(ModItems.BOW.get(), identifier("pulling"), ((pStack, pLevel, pEntity, pSeed) ->
+                        pEntity instanceof Player && pEntity.isUsingItem() && pEntity.getUseItem().getItem() == pStack.getItem() && pStack.getOrCreateTag().getBoolean("Selected") ? 1 : 0));
+                ItemProperties.register(ModItems.BOW.get(), identifier("pull"), ((pStack, pLevel, pEntity, pSeed) ->
+                        pEntity instanceof Player && pEntity.isUsingItem() && pEntity.getUseItem().getItem() == pStack.getItem() && pStack.getOrCreateTag().getBoolean("Selected") ? (pStack.getUseDuration() - pEntity.getUseItemRemainingTicks()) / 20f : 0));
                 ItemProperties.register(ModItems.BOW.get(), identifier("melee"), ((pStack, pLevel, pEntity, pSeed) -> {
                     IModule<ModuleAttackAmplificationUnit> module = MekanismAPI.getModuleHelper().load(pStack, MekanismModules.ATTACK_AMPLIFICATION_UNIT);
                     return module != null && module.isEnabled() ? 1 : 0;
                 }));
                 EntityRenderers.register(ModEntities.ARROW.get(), ArrowEntityRenderer::new);
             });
-        }
-        @SubscribeEvent
-        public void registerBlockEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-//            required(MEKANISM).run(() -> {
-//                event.registerBlockEntityRenderer(ModBlockEntities.ANCHOR.get(), AnchorBlockEntityRenderer::new);
-//            });
         }
     }
 }
