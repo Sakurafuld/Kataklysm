@@ -11,7 +11,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +23,6 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +31,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.sakurafuld.kataklysm.Deets.*;
+import static com.sakurafuld.kataklysm.Deets.LOG;
+import static com.sakurafuld.kataklysm.Deets.side;
 import static net.minecraft.world.level.block.HopperBlock.FACING;
 
 public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyStorage {
@@ -142,11 +141,12 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
             flag = pair.getFirst().equals(pos);
             if(flag) {
                 player.playSound(SoundEvents.WOOL_BREAK, 6, 1.5f);
-                required(LogicalSide.SERVER).run(() -> {
+                if(side().isServer()) {
                     this.getTouchedBlocks().remove(pair);
                     this.setChanged();
                     this.sync();
-                });
+                    return;
+                }
             }
         }
     }

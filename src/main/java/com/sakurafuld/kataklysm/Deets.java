@@ -27,11 +27,48 @@ public class Deets {
     public static final String BOTANIA = "botania";
     public static final String DRACONICEVOLUTION = "draconicevolution";
 
+    public static class Config {
+        public static final ForgeConfigSpec SPEC;
+
+        public static final ForgeConfigSpec.IntValue ANCHOR_DISTANCE;
+        public static final ForgeConfigSpec.IntValue ANCHOR_ANGLE;
+        public static final ForgeConfigSpec.IntValue SOLAR_MAX;
+        public static final ForgeConfigSpec.IntValue SOLAR_RATE;
+
+        static {
+            ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+
+            BUILDER.push("Blocks");
+
+            ANCHOR_DISTANCE = BUILDER
+                    .comment("Maximum distance that can be teleported using the Discorder and Meka-Tool",
+                            "Render distance must be set higher than this in the settings to work",
+                            "Default: 128")
+                    .defineInRange("Discorder Distance", 128, 0, Integer.MAX_VALUE);
+            ANCHOR_ANGLE = BUILDER
+                    .comment("Maximum angle of look at which the discoder responds to teleport",
+                            "Default: 12")
+                    .defineInRange("Discorder Angle", 12, 0, Integer.MAX_VALUE);
+            SOLAR_MAX = BUILDER
+                    .comment("Maximum storage of mana in the Miniature Sunshine",
+                            "Default: 100000")
+                    .defineInRange("Miniature Sunshine Max Mana", 100000, 0, Integer.MAX_VALUE);
+            SOLAR_RATE = BUILDER
+                    .comment("Miniature Sunshine mana consumption rates",
+                            "Default: 800")
+                    .defineInRange("Miniature Sunshine Rate", 800, 0, Integer.MAX_VALUE);
+
+            BUILDER.pop();
+
+            SPEC = BUILDER.build();
+        }
+    }
+
     public static Act required(String modid) {
-        return FMLLoader.getLoadingModList().getModFileById(modid) != null ? Act.TRUE : Act.FALSE;
+        return Act.of(FMLLoader.getLoadingModList().getModFileById(modid) != null);
     }
     public static Act requiredAll(String... modids){
-        return Arrays.stream(modids).allMatch(modid->FMLLoader.getLoadingModList().getModFileById(modid) != null) ? Act.TRUE : Act.FALSE;
+        return Act.of(Arrays.stream(modids).allMatch(modid->FMLLoader.getLoadingModList().getModFileById(modid) != null));
     }
 
     public static ResourceLocation identifier(String path){
@@ -48,25 +85,28 @@ public class Deets {
         return resourceLocations;
     }
     public static Act required(ResourceLocation key){
-        return ForgeRegistries.ITEMS.containsKey(key) ? Act.TRUE : Act.FALSE;
+        return Act.of(ForgeRegistries.ITEMS.containsKey(key));
     }
     public static Act requiredAny(ResourceLocation... keys){
-        return Arrays.stream(keys).anyMatch(ForgeRegistries.ITEMS::containsKey) ? Act.TRUE : Act.FALSE;
+        return Act.of(Arrays.stream(keys).anyMatch(ForgeRegistries.ITEMS::containsKey));
     }
     public static Act requiredAll(ResourceLocation... keys){
-        return Arrays.stream(keys).allMatch(ForgeRegistries.ITEMS::containsKey) ? Act.TRUE : Act.FALSE;
+        return Act.of(Arrays.stream(keys).allMatch(ForgeRegistries.ITEMS::containsKey));
     }
     public static LogicalSide side(){
         return EffectiveSide.get();
     }
     public static Act required(LogicalSide side){
-        return side() == side ? Act.TRUE : Act.FALSE;
+        return Act.of(side() == side);
     }
 
     public enum Act {
         FALSE,
         TRUE;
 
+        public static Act of(boolean act) {
+            return act ? TRUE : FALSE;
+        }
         public void run(Runnable runnable){
             switch (this){
                 case FALSE -> {return;}
@@ -101,37 +141,6 @@ public class Deets {
                 case TRUE -> {return true;}
             }
             throw new IllegalStateException();
-        }
-    }
-    public static class Config {
-        public static final ForgeConfigSpec SPEC;
-
-        public static final ForgeConfigSpec.IntValue ANCHOR_DISTANCE;
-        public static final ForgeConfigSpec.IntValue SOLAR_MAX;
-        public static final ForgeConfigSpec.IntValue SOLAR_RATE;
-
-        static {
-            ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-
-            BUILDER.push("Blocks");
-
-            ANCHOR_DISTANCE = BUILDER
-                    .comment("Maximum distance that can be teleported using the Discorder and Meka-Tool",
-                            "Render distance must be set higher than this in the settings to work",
-                            "Default: 128")
-                    .defineInRange("Discorder Distance", 128, 0, Integer.MAX_VALUE);
-            SOLAR_MAX = BUILDER
-                    .comment("Maximum storage of mana in the Miniature Sunshine",
-                            "Default: 100000")
-                    .defineInRange("Miniature Sunshine Max Mana", 100000, 0, Integer.MAX_VALUE);
-            SOLAR_RATE = BUILDER
-                    .comment("Miniature Sunshine mana consumption rates",
-                            "Default: 800")
-                    .defineInRange("Miniature Sunshine Rate", 800, 0, Integer.MAX_VALUE);
-
-            BUILDER.pop();
-
-            SPEC = BUILDER.build();
         }
     }
 }

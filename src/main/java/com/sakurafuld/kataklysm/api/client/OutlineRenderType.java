@@ -1,6 +1,9 @@
 package com.sakurafuld.kataklysm.api.client;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -8,11 +11,23 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.OptionalDouble;
 
 //This is free and unencumbered software released into the public domain.
 //らしいのでつかわせてもらいます！！.
 @OnlyIn(Dist.CLIENT)
 public class OutlineRenderType extends RenderType {
+    public static final RenderType BOLD_LINES = create("Anchor",
+            DefaultVertexFormat.POSITION_COLOR_NORMAL, VertexFormat.Mode.LINES, 256, false, false,
+            CompositeState.builder()
+                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(4)))
+                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
+                    .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false));
 
     private static final Map<RenderType, OutlineRenderType> TYPES = new HashMap<>();
 
@@ -42,7 +57,6 @@ public class OutlineRenderType extends RenderType {
     public String toString() {
         return "Outline" + this.parent;
     }
-
     @Override
     public void setupRenderState() {
         this.parent.setupRenderState();
@@ -50,7 +64,6 @@ public class OutlineRenderType extends RenderType {
             Minecraft.getInstance().levelRenderer.entityTarget().bindWrite(false);
 
     }
-
     @Override
     public void clearRenderState() {
         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);

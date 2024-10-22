@@ -13,7 +13,6 @@ import mekanism.common.registries.MekanismModules;
 import mekanism.common.util.StorageUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,7 +38,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-import static com.sakurafuld.kataklysm.Deets.*;
+import static com.sakurafuld.kataklysm.Deets.LOG;
+import static com.sakurafuld.kataklysm.Deets.side;
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
 public class AnchorBlock extends Block implements EntityBlock, SimpleWaterloggedBlock {
@@ -55,7 +55,7 @@ public class AnchorBlock extends Block implements EntityBlock, SimpleWaterlogged
 
         return player.isShiftKeyDown() && PREDICATE.test(player.getItemInHand(InteractionHand.MAIN_HAND)) || PREDICATE.test(player.getItemInHand(InteractionHand.OFF_HAND));
     }
-    public boolean drainEnergy(Player player, double distance, ItemStack stack){
+    public boolean drainEnergy(Player player, double distance, ItemStack stack) {
         IEnergyContainer energyContainer = StorageUtils.getEnergyContainer(stack, 0);
         FloatingLong energyNeeded = MekanismConfig.gear.mekaToolEnergyUsageTeleport.get().multiply(distance / 20);
         if (energyContainer == null || (!player.getAbilities().instabuild && energyContainer.getEnergy().smallerThan(energyNeeded))){
