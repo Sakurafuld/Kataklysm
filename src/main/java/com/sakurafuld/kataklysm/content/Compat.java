@@ -5,7 +5,9 @@ import com.sakurafuld.kataklysm.content.mekaArm.bow.ArrowEntityRenderer;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleAimAdjustmentUnit;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleArrowSpeedUnit;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleBarrageUnit;
+import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleHomingUnit;
 import mekanism.api.MekanismAPI;
+import mekanism.api.gear.ICustomModule;
 import mekanism.api.gear.IModule;
 import mekanism.api.gear.ModuleData;
 import mekanism.common.content.gear.ModuleHelper;
@@ -15,8 +17,8 @@ import mekanism.common.registries.MekanismModules;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -32,17 +34,19 @@ import static com.sakurafuld.kataklysm.Deets.*;
 public class Compat {
     public static class Mekanism {
         private static Mekanism INSTANCE;
+        private final ResourceKey<Registry<ModuleData<?>>> KEY = ResourceKey.createRegistryKey(identifier(MEKANISM, "module"));
         public static Mekanism get() {
             return INSTANCE == null ? INSTANCE = new Mekanism() : INSTANCE;
         }
 
-        public final ModuleRegistryObject<ModuleArrowSpeedUnit> ARROW_SPEED =
-                new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "arrow_speed_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
-        public final ModuleRegistryObject<ModuleBarrageUnit> BARRAGE =
-                new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "barrage_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
-        public final ModuleRegistryObject<ModuleBarrageUnit> AIM_ADJUSTMENT =
-                new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, "aim_adjustment_unit"), ResourceKey.createRegistryKey(new ResourceLocation(MEKANISM, "module")), KATAKLYSM));
+        public final ModuleRegistryObject<ModuleArrowSpeedUnit> ARROW_SPEED = moduleRegistryObject("arrow_speed_unit");
+        public final ModuleRegistryObject<ModuleBarrageUnit> AIM_ADJUSTMENT = moduleRegistryObject("aim_adjustment_unit");
+        public final ModuleRegistryObject<ModuleBarrageUnit> BARRAGE = moduleRegistryObject("barrage_unit");
+        public final ModuleRegistryObject<ModuleHomingUnit> HOMING = moduleRegistryObject("homing_unit");
 
+        private <T extends ICustomModule<T>> ModuleRegistryObject<T> moduleRegistryObject(String name) {
+            return new ModuleRegistryObject<>(RegistryObject.create(identifier(KATAKLYSM, name), KEY, KATAKLYSM));
+        }
         public RegistryObject<Item> registerModuleItem(ModuleRegistryObject<?> provider){
             return ModItems.register("module_" + provider.getInternalRegistryName(),
                     prop -> ModuleHelper.INSTANCE.createModuleItem(provider, prop));
@@ -63,7 +67,10 @@ public class Compat {
                         .maxStackSize(4).rarity(Rarity.RARE).rendersHUD())
                         .setRegistryName(identifier(KATAKLYSM, "barrage_unit")));
 
-//                Compat.Mekanism.ARROW_SPEED.updateReference(event.getRegistry());
+                event.getRegistry().register(new ModuleData<>(ModuleData.ModuleDataBuilder.custom(ModuleHomingUnit::new, () -> ModItems.HOMING_UNIT.get())
+                        .maxStackSize(3).rarity(Rarity.RARE))
+                        .setRegistryName(identifier(KATAKLYSM, "homing_unit")));
+
             });
         }
         @OnlyIn(Dist.CLIENT)

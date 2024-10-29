@@ -23,6 +23,7 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import org.jetbrains.annotations.NotNull;
@@ -31,14 +32,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.sakurafuld.kataklysm.Deets.LOG;
-import static com.sakurafuld.kataklysm.Deets.side;
+import static com.sakurafuld.kataklysm.Deets.*;
 import static net.minecraft.world.level.block.HopperBlock.FACING;
 
 public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyStorage {
     private static final Capability<IItemHandler> ITEM_CAPABILITY = CapabilityManager.get(new CapabilityToken<>(){});
     private static final Capability<IEnergyStorage> ENERGY_CAPABILITY = CapabilityManager.get(new CapabilityToken<>(){});
-    private final LazyOptional<IEnergyStorage> HANDLER = LazyOptional.of(() -> this);
+    private LazyOptional<IEnergyStorage> HANDLER = LazyOptional.of(() -> this);
     private int lastReceive = 0;
     private long lastTick = -1;
 
@@ -49,9 +49,8 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
     @Override
     public int receiveEnergy(int maxReceive, boolean simulate) {
         if(!simulate) {
-
             if(this.lastTick == this.getLevel().getGameTime()) {
-                if((this.lastReceive + maxReceive) >= 0) {
+                if((this.lastReceive + maxReceive) > 0) {
                     this.lastReceive += maxReceive;
                 } else {
                     //オーバーフロー！！！.
@@ -61,6 +60,9 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
                 this.lastReceive = maxReceive;
                 this.lastTick = this.getLevel().getGameTime();
             }
+            required(LogicalSide.SERVER).run(() ->
+                    LOG.debug("{}-Energy={}", this.getLevel().getGameTime(), this.lastReceive));
+//            this.lastReceiveDummy = this.lastReceive;
         }
         return maxReceive;
     }
@@ -70,6 +72,9 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
     }
     @Override
     public int getEnergyStored() {
+//        if(this.lastTick != this.getLevel().getGameTime())
+//            this.lastReceiveDummy = 0;
+//        LOG.debug("{}-Stored={}", literalSide(), this.lastReceive);
         return this.lastReceive;
     }
     @Override
@@ -85,6 +90,18 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
         return true;
     }
 
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        this.HANDLER.invalidate();
+    }
+
+    @Override
+    public void reviveCaps() {
+        super.reviveCaps();
+        this.HANDLER = LazyOptional.of(() -> this);
+    }
+
     @NotNull
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -95,6 +112,7 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
         return this.lastReceive;
     }
     public void resetRate() {
+//        LOG.debug("{}-ResetRate", literalSide());
         this.lastReceive = 0;
     }
 
@@ -157,7 +175,7 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
 
 
         if(player instanceof ServerPlayer serverPlayer) {
-                           serverPlayer.connection.send(new ClientboundSoundPacket(SoundEvents.ARMOR_EQUIP_ELYTRA, player.getSoundSource(), player.getX(), player.getY(), player.getZ(), 1, 2));
+            serverPlayer.connection.send(new ClientboundSoundPacket(SoundEvents.ARMOR_EQUIP_ELYTRA, player.getSoundSource(), player.getX(), player.getY(), player.getZ(), 1, 2));
         }
 
         LOG.debug("{}-Reach={}!!!", side(), player != null);
@@ -176,8 +194,7 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
 //        if(level.getGameTime() % 60 == 0)
 //            LOG.debug("{}-Tick!!!={}", side(), self.getRate());
         int rate = self.getRate();
-        self.resetRate();
-
+//        LOG.debug("{}-Energy={}", level.getGameTime(), rate);
 
         for(Map.Entry<Pair<BlockPos, Direction>, Integer> entry : self.getTouchedBlocks().entrySet()) {
 
@@ -232,6 +249,7 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
                 }
             }));
         }
+//        self.lastReceiveDummy = rate;
         self.resetRate();
     }
 
@@ -246,6 +264,7 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
     public void load(CompoundTag pTag) {
         super.load(pTag);
         this.lastReceive = pTag.getInt("LastReceive");
+//        this.lastReceiveDummy = this.lastReceive;
         this.lastTick = pTag.getLong("LastTick");
     }
 }

@@ -181,6 +181,7 @@ dependencies {
     implementation fg.deobf("curse.maven:untranslated-items-401770:3579243")
     implementation fg.deobf("curse.maven:mmmmmmmmmmmm-225738:3820503")
     implementation fg.deobf("curse.maven:carry-on-274259:5141758")
+    implementation fg.deobf("curse.maven:itemzoom-261725:3749454")
     // Real mod deobf dependency examples - these get remapped to your current mappings
     // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}") // Adds the full JEI mod as a runtime dependency

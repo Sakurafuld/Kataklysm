@@ -7,6 +7,9 @@
   "mixins": [
     "mekaArm.ModuleHelperMixin",
     "mekaArm.ServerEntityMixin",
+    "oneness.BoundTickingBlockEntityAccessor",
+    "oneness.LevelMixin",
+    "oneness.RebindableTickingBlockEntityWrapperAccessor",
     "solar.AdvancedSolarGeneratorMixin",
     "solar.DaylightDetectorMixin",
     "solar.MobMixin",

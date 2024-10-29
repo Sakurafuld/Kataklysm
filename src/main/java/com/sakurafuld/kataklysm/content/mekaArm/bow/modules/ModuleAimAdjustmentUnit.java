@@ -36,7 +36,7 @@ public class ModuleAimAdjustmentUnit implements ICustomModule<ModuleAimAdjustmen
         STORMTROOPER(2),
         NORMAL(1),
         SNIPER(0.5f),
-        THIRTEEN(0);
+        HAWKEYE(0);
 
         private final float adjustment;
         private final Component label;

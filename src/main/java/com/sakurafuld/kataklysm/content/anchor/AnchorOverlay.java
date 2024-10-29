@@ -1,5 +1,6 @@
 package com.sakurafuld.kataklysm.content.anchor;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -33,14 +34,8 @@ public class AnchorOverlay implements IIngameOverlay {
 
             gui.setupOverlayRenderState(true, false);
 
-            poseStack.pushPose();
-
-            mc.getItemRenderer().renderGuiItem(anchor.getIcon(), centerX - 8, centerY - 8 + 12 + 8);
-
-            poseStack.popPose();
-
             String name = anchor.getName();
-            if(!name.isEmpty()){
+            if(!name.isEmpty()) {
                 if(mc.font.isBidirectional())
                     name = mc.font.bidirectionalShaping(name);
                 float halfWidth = (float) -mc.font.width(name) / 2;
@@ -53,11 +48,17 @@ public class AnchorOverlay implements IIngameOverlay {
                 int down = mc.font.lineHeight + 1;
 
                 poseStack.pushPose();
-                poseStack.translate(centerX, centerY - 14 - 8, 0);
+                poseStack.translate(centerX, centerY + 17, 0);
                 poseStack.scale(1.3f, 1.3f, 1);
 
 //                mc.font.drawInBatch(name, halfWidth, 0, color, false, poseStack.last().pose(), mc.renderBuffers().bufferSource(), true, alpha, LightTexture.FULL_BRIGHT);
+                poseStack.pushPose();
+                poseStack.translate(-0.5, 0, 0);
+
                 mc.font.drawInBatch(name, halfWidth, 0, mainColor, false, poseStack.last().pose(), mc.renderBuffers().bufferSource(), false, 0, LightTexture.FULL_BRIGHT);
+
+                poseStack.popPose();
+
                 GuiComponent.fill(poseStack, left, up, right, down, BACK.getRGB());
 
                 GuiComponent.fill(poseStack, left, up, right, up + 1, mainColor);
@@ -67,6 +68,19 @@ public class AnchorOverlay implements IIngameOverlay {
 
                 poseStack.popPose();
                 mc.renderBuffers().bufferSource().endBatch();
+            }
+
+            if(!anchor.getIcon().isEmpty()) {
+                float multiplier = 1.5f;
+                PoseStack modelView = RenderSystem.getModelViewStack();
+                modelView.pushPose();
+                modelView.translate(centerX - 8 * multiplier, centerY - 8 * multiplier + 46, 0);
+                modelView.scale(multiplier, multiplier, 1);
+
+                mc.getItemRenderer().renderGuiItem(anchor.getIcon(), 0/*centerX - 8 - 8*/, 0/*centerY - 8 - 8 + 39*/);
+
+                modelView.popPose();
+                RenderSystem.applyModelViewMatrix();
             }
         });
     }

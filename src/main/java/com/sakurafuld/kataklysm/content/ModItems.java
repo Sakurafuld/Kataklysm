@@ -24,6 +24,7 @@ public class ModItems {
     public static final RegistryObject<Item> ARROW_SPEED_UNIT;
     public static final RegistryObject<Item> AIM_ADJUSTMENT_UNIT;
     public static final RegistryObject<Item> BARRAGE_UNIT;
+    public static final RegistryObject<Item> HOMING_UNIT;
 
     static {
 
@@ -31,6 +32,8 @@ public class ModItems {
         ARROW_SPEED_UNIT = required(MEKANISM).get(() -> Compat.Mekanism.get().registerModuleItem(Compat.Mekanism.get().ARROW_SPEED));
         AIM_ADJUSTMENT_UNIT = required(MEKANISM).get(() -> Compat.Mekanism.get().registerModuleItem(Compat.Mekanism.get().AIM_ADJUSTMENT));
         BARRAGE_UNIT = required(MEKANISM).get(() -> Compat.Mekanism.get().registerModuleItem(Compat.Mekanism.get().BARRAGE));
+        HOMING_UNIT = required(MEKANISM).get(() -> Compat.Mekanism.get().registerModuleItem(Compat.Mekanism.get().HOMING));
+
 
 
         ONENESS_TOUCH = register("oneness_touch", OnenessTouchItem::new);

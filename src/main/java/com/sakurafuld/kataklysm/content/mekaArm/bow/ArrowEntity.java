@@ -280,9 +280,11 @@ public class ArrowEntity extends AbstractArrow {
             this.setPos(d7, d2, d3);
             this.checkInsideBlocks();
         }
-        if(this.inGroundTime >= (this.isSub() ? 5 : 40)) this.discard();
+        if(this.inGroundTime >= (this.isSub() ? 5 : 40))
+            this.discard();
 
-        if(this.tickCount >= 400) this.discard();
+        if(this.tickCount >= 400)
+            this.discard();
 
 //        if(this.tickCount % 10 == 0) {
 //            LOG.debug("{}-PreDelta={}", side(), this.getDeltaMovement());
@@ -372,7 +374,8 @@ public class ArrowEntity extends AbstractArrow {
 
         float damage = Mth.ceil(Mth.clamp(this.getBaseDamage() * speedFactor, 0.0D, 2.147483647E9D));
 
-        if(this.isSub()) damage *= this.getSubMultiplier();
+        if(this.isSub())
+            damage *= this.getSubMultiplier();
 
         if(this.isCritArrow()) {
 //            damage += Mth.floor(Mth.lerp(this.random.nextFloat(), damage / 8, damage / 4));

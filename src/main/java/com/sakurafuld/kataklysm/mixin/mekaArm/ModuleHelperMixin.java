@@ -3,12 +3,10 @@ package com.sakurafuld.kataklysm.mixin.mekaArm;
 import com.google.common.collect.ImmutableSet;
 import com.sakurafuld.kataklysm.content.Compat;
 import com.sakurafuld.kataklysm.content.ModItems;
-import mekanism.api.MekanismAPI;
 import mekanism.api.gear.ModuleData;
 import mekanism.common.content.gear.ModuleHelper;
 import mekanism.common.registries.MekanismModules;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -20,9 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static com.sakurafuld.kataklysm.Deets.*;
+import static com.sakurafuld.kataklysm.Deets.LOG;
+import static com.sakurafuld.kataklysm.Deets.side;
 
 @Pseudo
 @Mixin(value = ModuleHelper.class, remap = false)
@@ -41,6 +39,7 @@ public abstract class ModuleHelperMixin {
         bowModules.add(Compat.Mekanism.get().ARROW_SPEED.get());
         bowModules.add(Compat.Mekanism.get().AIM_ADJUSTMENT.get());
         bowModules.add(Compat.Mekanism.get().BARRAGE.get());
+        bowModules.add(Compat.Mekanism.get().HOMING.get());
 
         this.supportedModules.put(ModItems.BOW.get(), bowModules);
 

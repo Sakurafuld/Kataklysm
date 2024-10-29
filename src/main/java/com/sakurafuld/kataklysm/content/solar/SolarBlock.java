@@ -22,24 +22,24 @@ import org.jetbrains.annotations.Nullable;
 import vazkii.botania.common.block.tile.mana.TilePool;
 
 import static com.sakurafuld.kataklysm.Deets.*;
-import static net.minecraft.world.level.block.state.properties.BlockStateProperties.ENABLED;
+import static net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT;
 
 public class SolarBlock extends Block implements EntityBlock {
 
     public SolarBlock(Properties prop) {
         super(prop);
-        this.registerDefaultState(this.stateDefinition.any().setValue(ENABLED, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(LIT, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(ENABLED);
+        pBuilder.add(LIT);
     }
 
     @Nullable
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-    return this.defaultBlockState().setValue(ENABLED, Boolean.FALSE);
+    return this.defaultBlockState().setValue(LIT, false);
     }
 
     @Override

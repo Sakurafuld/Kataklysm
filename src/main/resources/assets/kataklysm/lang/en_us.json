@@ -19,6 +19,10 @@
   "description.kataklysm.barrage_unit": "Multishot with Subarrows",
   "module.kataklysm.barrage_overlay": "Subarrow:",
 
+  "module.kataklysm.homing": "Homing Strength",
+  "module.kataklysm.homing_unit": "Homing Unit",
+  "description.kataklysm.homing_unit": "Arrows homing nearby enemies",
+
   "block.kataklysm.well": "Well of Singularities",
   "block.kataklysm.anchor": "Discorder",
   "block.kataklysm.solar": "Miniature Sunshine",

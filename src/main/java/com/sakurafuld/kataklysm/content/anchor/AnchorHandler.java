@@ -165,7 +165,6 @@ public class AnchorHandler {
                 });
             }
         });
-
     }
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -195,33 +194,36 @@ public class AnchorHandler {
                     double scale = Math.sqrt(tile.getBlockPos().distToCenterSqr(player.getEyePosition().add(0, 0.5, 0)) * 0.01);
                     double multiplier = Math.pow(Math.toRadians(mc.options.fov), 2.0);
                     scale += multiplier;
+                    Optional<BlockPos> anchor = AnchorHandler.getTargetAnchorPos(player);
 
-                    if(AnchorHandler.getTargetAnchorPos(player).isEmpty() || !AnchorHandler.getTargetAnchorPos(player).get().equals(pos)) {
+                    if(anchor.isEmpty() || !anchor.get().equals(pos)) {
                         poseStack.pushPose();
 
                         poseStack.translate(x, y, z);
 
-                        poseStack.pushPose();
-                        poseStack.translate(0.5, 0.5, 0.5);
-                        poseStack.mulPose(camera.rotation());
-                        poseStack.scale(1, 1, 0.0001f);
-                        poseStack.translate(0, 0, 0.3);
-                        poseStack.scale((float) -scale, (float) scale, (float) -scale);
+                        if(!tile.getIcon().isEmpty()) {
+                            poseStack.pushPose();
+                            poseStack.translate(0.5, 0.5, 0.5);
+                            poseStack.mulPose(camera.rotation());
+                            poseStack.scale(1, 1, 0.0001f);
+                            poseStack.translate(0, 0, 0.3);
+                            poseStack.scale((float) -scale, (float) scale, (float) -scale);
 
-                        mc.getItemRenderer()//                                                                             -------EnderIOをパクっただけなので何が起きているのか分からないゾーン-------
-                                .render(tile.getIcon(), ItemTransforms.TransformType.GUI, false, poseStack, OutlineBuffer.INSTANCE, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, mc.getItemRenderer().getModel(tile.getIcon(), tile.getLevel(), null, 0));
+                            mc.getItemRenderer()//                                                                             -------EnderIOをパクっただけなので何が起きているのか分からないゾーン-------
+                                    .render(tile.getIcon(), ItemTransforms.TransformType.GUI, false, poseStack, OutlineBuffer.INSTANCE, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, mc.getItemRenderer().getModel(tile.getIcon(), tile.getLevel(), null, 0));
 
-                        poseStack.popPose();
+                            poseStack.popPose();
+                        }
 
 
                         if(!tile.getName().isEmpty()){
                             poseStack.pushPose();
                             poseStack.translate(0.5, 0.7, 0.5);
                             poseStack.mulPose(camera.rotation());
-                            poseStack.translate(0, 0, -0.3);
-                            poseStack.scale((float) -scale * 0.025f, (float) -scale * 0.025f, (float) scale * 0.025f);
+                            poseStack.translate(0, tile.getIcon().isEmpty() ? 1 : 1 + (scale * scale / 14), -0.3);
+                            poseStack.scale((float) -scale * 0.05f, (float) -scale * 0.05f, 0);
 
-                            float textOpacitySetting = mc.options.getBackgroundOpacity(0.9f);
+                            float textOpacitySetting = mc.options.getBackgroundOpacity(0.4f);
                             int alpha = (int) (textOpacitySetting * 255) << 24;
 
                             Matrix4f matrix = poseStack.last().pose();
@@ -240,7 +242,7 @@ public class AnchorHandler {
                         }
                         poseStack.popPose();
 
-                    } else if(AnchorHandler.getTargetAnchorPos(player).get().equals(pos)) {
+                    } else if(anchor.get().equals(pos)) {
                         float s = (float) (scale / 1.8f) <= 1 ? 1 : (float) (scale / 1.8f);
                         Consumer<BlockPos> RENDERER = target -> {
                             BlockState state = level.getBlockState(target);

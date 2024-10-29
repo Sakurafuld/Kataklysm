@@ -1,14 +1,9 @@
 package com.sakurafuld.kataklysm.content.solar;
 
 import com.google.common.base.Predicates;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.sakurafuld.kataklysm.Deets;
 import com.sakurafuld.kataklysm.api.BlockEntityBotania;
 import com.sakurafuld.kataklysm.api.capability.SolarLevelChunk;
 import com.sakurafuld.kataklysm.content.ModBlockEntities;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -24,8 +19,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.LogicalSide;
 import org.jetbrains.annotations.Nullable;
-import vazkii.botania.api.BotaniaAPIClient;
-import vazkii.botania.api.block.IWandHUD;
 import vazkii.botania.api.internal.VanillaPacketDispatcher;
 import vazkii.botania.api.mana.IManaPool;
 import vazkii.botania.api.mana.IManaReceiver;
@@ -36,9 +29,10 @@ import vazkii.botania.api.mana.spark.SparkUpgradeType;
 
 import java.util.List;
 
-import static com.sakurafuld.kataklysm.Deets.*;
+import static com.sakurafuld.kataklysm.Deets.Config;
+import static com.sakurafuld.kataklysm.Deets.required;
 
-public class SolarBlockEntity extends BlockEntityBotania implements IManaReceiver, ISparkAttachable, IWandHUD {
+public class SolarBlockEntity extends BlockEntityBotania implements IManaReceiver, ISparkAttachable {
     private boolean active;
     private int mana;
     private boolean packet;
@@ -90,7 +84,7 @@ public class SolarBlockEntity extends BlockEntityBotania implements IManaReceive
         required(LogicalSide.SERVER).run(()-> level.getChunkAt(pos).getCapability(SolarLevelChunk.CAPABILITY).ifPresent(solar-> {
             boolean old = self.active;
             self.active = self.mana > Config.SOLAR_RATE.get();
-            level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.ENABLED, self.active));
+            level.setBlockAndUpdate(pos, state.setValue(BlockStateProperties.LIT, self.active));
             if(self.active)
                 self.receiveMana(-Config.SOLAR_RATE.get());
 
@@ -175,11 +169,5 @@ public class SolarBlockEntity extends BlockEntityBotania implements IManaReceive
     @Override
     public boolean areIncomingTranfersDone() {
         return false;
-    }
-
-    @Override
-    public void renderHUD(PoseStack poseStack, Minecraft mc) {
-        int color = 4474111;
-        BotaniaAPIClient.instance().drawSimpleManaHUD(poseStack, color, this.mana, Config.SOLAR_MAX.get(), (this.active ? ChatFormatting.GOLD : "") + I18n.get("block.kataklysm.solar"));
     }
 }

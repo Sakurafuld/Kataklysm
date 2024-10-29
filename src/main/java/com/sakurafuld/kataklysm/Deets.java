@@ -8,6 +8,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.util.thread.EffectiveSide;
+import net.minecraftforge.fml.util.thread.SidedThreadGroup;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ public class Deets {
     public static final Logger LOG = LoggerFactory.getLogger(KATAKLYSM);
     public static final CreativeModeTab TAB = new CreativeModeTab(KATAKLYSM){@Override public ItemStack makeIcon() {return new ItemStack(Items.DRAGON_HEAD);}};
 
-    public static final String CURIOS = "curios";
     public static final String MEKANISM = "mekanism";
     public static final String BOTANIA = "botania";
     public static final String DRACONICEVOLUTION = "draconicevolution";
@@ -95,6 +95,9 @@ public class Deets {
     }
     public static LogicalSide side(){
         return EffectiveSide.get();
+    }
+    public static String literalSide() {
+        return Thread.currentThread().getThreadGroup() instanceof SidedThreadGroup side ? side.getSide().name() : "SpecialThread";
     }
     public static Act required(LogicalSide side){
         return Act.of(side() == side);

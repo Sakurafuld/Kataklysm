@@ -8,6 +8,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -34,7 +35,7 @@ public class ModBlocks {
         ANCHOR = required(MEKANISM).getOr(()-> register("anchor", ()-> new AnchorBlock(BlockBehaviour.Properties.of(Material.METAL).strength(5.0f, 9.0f).noOcclusion().requiresCorrectToolForDrops())),
                 () -> dummy("anchor"));
 
-        SOLAR = required(BOTANIA).getOr(()-> register("solar", ()-> new SolarBlock(BlockBehaviour.Properties.of(Material.GLASS).strength(3f, 10f).noOcclusion().requiresCorrectToolForDrops())),
+        SOLAR = required(BOTANIA).getOr(()-> register("solar", ()-> new SolarBlock(BlockBehaviour.Properties.of(Material.GLASS).strength(3f, 10f).noOcclusion().requiresCorrectToolForDrops().lightLevel((state) -> state.getValue(BlockStateProperties.LIT) ? 15 : 0))),
                 () -> dummy("solar"));
 
 //        ONENESS = required(DRACONICEVOLUTION).get(()-> register("oneness", ()-> new OnenessBlock(BlockBehaviour.Properties.of(Material.METAL).strength(20.0F, 600.0F).noOcclusion().requiresCorrectToolForDrops())));

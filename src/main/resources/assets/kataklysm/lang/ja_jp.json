@@ -8,18 +8,21 @@
 
   "module.kataklysm.arrow_speed": "矢の速度倍率",
   "module.kataklysm.arrow_speed_unit": "発射速度改変ユニット",
-  "description.kataklysm.arrow_speed_unit": "矢の速度を倍率によって操作する",
+  "description.kataklysm.arrow_speed_unit": "矢の速度を倍率によって操作します",
   "module.kataklysm.arrow_speed_overlay": "スピード:",
 
   "module.kataklysm.aim_adjustment": "ブレ",
   "module.kataklysm.aim_adjustment_unit": "エイムアジャストユニット",
-  "description.kataklysm.aim_adjustment_unit": "照準のブレを調整する",
+  "description.kataklysm.aim_adjustment_unit": "照準のブレを調整します",
 
   "module.kataklysm.barrage": "サブアローの発射数",
   "module.kataklysm.barrage_unit": "副矢連続発射ユニット",
-  "description.kataklysm.barrage_unit": "発射時に追加でサブアローを撃ち出す",
+  "description.kataklysm.barrage_unit": "発射時に追加でサブアローを撃ち出します",
   "module.kataklysm.barrage_overlay": "サブアロー:",
 
+  "module.kataklysm.homing": "追尾の強さ",
+  "module.kataklysm.homing_unit": "標的追尾ユニット",
+  "description.kataklysm.homing_unit": "矢が近くの標的に追尾するようになります",
 
   "block.kataklysm.well": "特異点の井戸",
   "block.kataklysm.anchor": "ディスコーダー",

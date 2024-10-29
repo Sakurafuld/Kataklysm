@@ -46,7 +46,7 @@ public class ModuleArrowSpeedUnit implements ICustomModule<ModuleArrowSpeedUnit>
         NORMAL(1, 1, 1),
         FAST(1.5f, 2, 1.25f),
         QUICK(3, 4, 5),
-        MACH(6, 8, 20),
+        SONIC(6, 8, 20),
         LIGHTSPEED(8, 16, 40);
 
         private final float speed;
