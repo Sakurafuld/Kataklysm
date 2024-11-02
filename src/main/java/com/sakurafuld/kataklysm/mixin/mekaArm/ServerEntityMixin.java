@@ -31,7 +31,7 @@ public abstract class ServerEntityMixin {
     @Inject(method = {"sendChanges()V"}, at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 2), cancellable = true)
     private void onVelocityBow(CallbackInfo ci) {
         if(this.entity instanceof ArrowEntity arrow) {
-            LOG.info("{}-sendChangesMk2", side());
+//            LOG.info("{}-sendChangesMk2", side());
             PacketHandler.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientboundArrowMove(arrow, false));
             ci.cancel();
         }
@@ -39,7 +39,7 @@ public abstract class ServerEntityMixin {
     @Inject(method = {"sendPairingData(Ljava/util/function/Consumer;)V"}, at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 3), cancellable = true)
     private void onPairingDataBow(Consumer<Packet<?>> pPacketConsumer, CallbackInfo ci) {
         if(this.entity instanceof ArrowEntity arrow) {
-            LOG.info("{}-sendPairingData", side());
+//            LOG.info("{}-sendPairingData", side());
             PacketHandler.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientboundArrowMove(arrow, false));
             ci.cancel();
         }
@@ -47,7 +47,7 @@ public abstract class ServerEntityMixin {
     @Inject(method = {"sendChanges()V"}, at = @At(value = "INVOKE", target = "Ljava/util/function/Consumer;accept(Ljava/lang/Object;)V", ordinal = 3), cancellable = true, locals = LocalCapture.CAPTURE_FAILSOFT)
     private void onMovePacketBow(CallbackInfo ci, List<Object> list, int l, int k1, Vec3 vec3, boolean flag2, Packet<ClientGamePacketListener> packet1) {
         if(this.entity instanceof ArrowEntity arrow) {
-            LOG.info("{}-sendChangesMk3={}", side(), packet1.getClass().getSimpleName());
+//            LOG.info("{}-sendChangesMk3={}", side(), packet1.getClass().getSimpleName());
             if(packet1 instanceof ClientboundMoveEntityPacket.PosRot) {
                 PacketHandler.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientboundArrowMove(arrow, true));
                 ci.cancel();

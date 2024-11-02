@@ -17,17 +17,17 @@ public class ModuleHomingUnit implements ICustomModule<ModuleHomingUnit> {
         this.homing = configItemCreator.createConfigItem("homing", () -> "module.kataklysm.homing",
                 new ModuleEnumData<>(Homing.class, module.getInstalledCount() + 1, Homing.LOW));
     }
-    public float getHoming() {
+    public int getHoming() {
         return this.homing.get().getHoming();
     }
 
     public enum Homing implements IHasTextComponent {
-        NONE(0, "None"),
-        LOW(1, "Low"),
-        MEDIUM(2, "Medium"),
+        NONE(-1, "None"),
+        LOW(20, "Low"),
+        MEDIUM(10, "Medium"),
         HIGH(3, "High");
 
-        private final float homing;
+        private final int homing;
         private final Component label;
 
         Homing(int homing, String name){
@@ -39,7 +39,7 @@ public class ModuleHomingUnit implements ICustomModule<ModuleHomingUnit> {
         public Component getTextComponent() {
             return this.label;
         }
-        public float getHoming() {
+        public int getHoming() {
             return this.homing;
         }
     }

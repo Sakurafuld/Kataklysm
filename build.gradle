@@ -234,6 +234,8 @@ dependencies {
     implementation fg.deobf("curse.maven:mna-arcane-additions-576150:5162611")
 
     implementation fg.deobf("curse.maven:travel-anchors-413234:3741307")
+
+    implementation fg.deobf("curse.maven:staffs-of-homing-magic-920672:4805214")
     // Examples using mod jars from ./libs
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 

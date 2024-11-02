@@ -60,9 +60,6 @@ public class OnenessBlockEntity extends TouchableBlockEntity implements IEnergyS
                 this.lastReceive = maxReceive;
                 this.lastTick = this.getLevel().getGameTime();
             }
-            required(LogicalSide.SERVER).run(() ->
-                    LOG.debug("{}-Energy={}", this.getLevel().getGameTime(), this.lastReceive));
-//            this.lastReceiveDummy = this.lastReceive;
         }
         return maxReceive;
     }

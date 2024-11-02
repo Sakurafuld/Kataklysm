@@ -220,7 +220,10 @@ public class AnchorHandler {
                             poseStack.pushPose();
                             poseStack.translate(0.5, 0.7, 0.5);
                             poseStack.mulPose(camera.rotation());
-                            poseStack.translate(0, tile.getIcon().isEmpty() ? 1 : 1 + (scale * scale / 14), -0.3);
+                            if(tile.getIcon().isEmpty())
+                                poseStack.translate(0, 1, 0);
+                            else poseStack.translate(0, 1 + (scale * scale / 14), -0.3);
+
                             poseStack.scale((float) -scale * 0.05f, (float) -scale * 0.05f, 0);
 
                             float textOpacitySetting = mc.options.getBackgroundOpacity(0.4f);

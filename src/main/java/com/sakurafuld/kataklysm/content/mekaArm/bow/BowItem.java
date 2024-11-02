@@ -6,6 +6,7 @@ import com.sakurafuld.kataklysm.content.ModSounds;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleAimAdjustmentUnit;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleArrowSpeedUnit;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleBarrageUnit;
+import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleHomingUnit;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
 import mekanism.api.energy.IEnergyContainer;
@@ -62,12 +63,16 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         private FloatingLong energy;
         private float power;
         private float inaccuracy;
+        private int homing;
+        private int piercing;
         private boolean cancel;
 
-        public Shoot(FloatingLong energy, float power, float inaccuracy) {
+        public Shoot(FloatingLong energy, float power, float inaccuracy, int homing, int piercing) {
             this.energy = energy;
             this.power = power;
             this.inaccuracy = inaccuracy;
+            this.homing = homing;
+            this.piercing = piercing;
             this.cancel = power < 0.1;
         }
     }
@@ -104,63 +109,57 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
     }
     @Override
     public void releaseUsing(ItemStack pStack, Level pLevel, LivingEntity pLivingEntity, int pTimeCharged) {
-        if(!(pLivingEntity instanceof Player player)) return;
+        if(!(pLivingEntity instanceof Player player))
+            return;
 
         IEnergyContainer energyContainer = StorageUtils.getEnergyContainer(pStack, 0);
-        if(energyContainer == null) return;
+        if(energyContainer == null)
+            return;
 
-//        FloatingLong energy = this.getShootRate();
-//
-//        float power = this.getPowerForTime(this.getUseDuration(pStack) - pTimeCharged);
-//        float inaccuracy = 1;
-//        boolean cancel = power < 0.1;
-
-        List<Consumer<ArrowEntity>> post = Lists.newArrayList();
-        NonNullList<Consumer<Shoot>> nonnull = NonNullList.withSize(8, shoot -> {});
+        NonNullList<Consumer<Shoot>> shooters = NonNullList.withSize(8, shoot -> {});
 
         for(Module<?> module : this.getModules(pStack)){
-            if(module.isEnabled()){
-                if(module.getCustomInstance() instanceof ModuleArrowSpeedUnit arrowSpeed) {
-                    nonnull.set(0, shoot -> {
+            if(module.isEnabled()) {
+                ICustomModule<?> instance = module.getCustomInstance();
+                if(instance instanceof ModuleArrowSpeedUnit arrowSpeed) {
+                    shooters.set(0, shoot -> {
                         LOG.debug("{}-ArrowSpeed", side());
                         shoot.power *= arrowSpeed.getSpeed();
                         shoot.energy = shoot.energy.multiply(shoot.power).multiply(arrowSpeed.getEnergyMultiplier());
                         shoot.inaccuracy *= arrowSpeed.getInaccuracy();
                         shoot.cancel = (arrowSpeed.getSpeed() > 0.5f && shoot.power < 0.1 * arrowSpeed.getSpeed());
                     });
-//                    power *= arrowSpeed.getSpeed();
-//                    energy = energy.multiply(power).multiply(arrowSpeed.getEnergyMultiplier());
-//                    inaccuracy *= arrowSpeed.getInaccuracy();
-//                    cancel = (arrowSpeed.getSpeed() > 0.5f && power < 0.1 * arrowSpeed.getSpeed());
                 }
-                if(module.getCustomInstance() instanceof ModuleBarrageUnit barrage) {
+                if(instance instanceof ModuleAimAdjustmentUnit aimAdjustment) {
+                    shooters.set(1, shoot -> {
+                        LOG.debug("{}-AimAdjustment", side());
+                        shoot.inaccuracy *= aimAdjustment.getAdjustment();
+                    });
+                }
+                if(instance instanceof ModuleBarrageUnit barrage) {
                     if(this.getUseDuration(pStack) - pTimeCharged >= 10) {
-                        post.add(arrow -> {
+                        shooters.set(7, shoot -> {
+                            LOG.debug("{}-Barrage", side());
                             required(LogicalSide.SERVER).run(() -> {
-                                if(!pStack.getOrCreateTag().contains("Subarrow")) {
+                                if(!shoot.cancel && !pStack.getOrCreateTag().contains("Subarrow")) {
                                     pStack.getOrCreateTag().putInt("Subarrow", barrage.getCount() * 100);
                                 }
                             });
                         });
                     }
                 }
-                if(module.getCustomInstance() instanceof ModuleAimAdjustmentUnit aimAdjustment) {
-                    nonnull.set(1, shoot -> {
-                        LOG.debug("{}-AimAdjustment", side());
-                        shoot.inaccuracy *= aimAdjustment.getAdjustment();
+                if(instance instanceof ModuleHomingUnit homing) {
+                    shooters.set(2, shoot -> {
+                        LOG.debug("{}-Homing={}", side(), homing.getHoming());
+                        shoot.homing = homing.getHoming();
                     });
-
-//                    post.add(arrow -> {
-//                        arrow.setInaccuracy(arrow.getInaccuracy() * aimAdjustment.getAdjustment());
-//                        LOG.debug("{}-Aiming={}", side(), arrow.getInaccuracy());
-//                    });
                 }
                 /*
                 * 近接8/
                 * 速度4/
                 * ブレ2/
                 * 貫通6Piercing
-                * 　ブロック貫通1Ghosting
+                * ブロック貫通1Ghosting
                 * ホーミング４Homing
                 * 連射4Barrage/
                 * 追い撃ち3Ambush Shot
@@ -171,9 +170,9 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
             }
         }
 
-        Shoot shoot = new Shoot(this.getShootRate(), this.getPowerForTime(this.getUseDuration(pStack) - pTimeCharged), 1);
+        Shoot shoot = new Shoot(this.getShootRate(), this.getPowerForTime(this.getUseDuration(pStack) - pTimeCharged), 1, 0, 0);
 
-        for(Consumer<Shoot> shooter : nonnull) {
+        for(Consumer<Shoot> shooter : shooters) {
             shooter.accept(shoot);
         }
 
@@ -184,16 +183,15 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         ArrowEntity arrow = new ArrowEntity(ModEntities.ARROW.get(), pLevel, player);
         arrow.setPower(shoot.power);
         arrow.setInaccuracy(shoot.inaccuracy);
-
-        for(Consumer<ArrowEntity> consumer : post) {
-            consumer.accept(arrow);
-        }
+        arrow.setHoming(shoot.homing);
 
         this.shoot(arrow, player);
 
-        pStack.getOrCreateTag().putString("LastEnergy", shoot.energy.toString());
-        pStack.getOrCreateTag().putFloat("LastPower", arrow.getPower());
-        pStack.getOrCreateTag().putFloat("LastInaccuracy", arrow.getInaccuracy());
+        CompoundTag tag = pStack.getOrCreateTag();
+        tag.putString("LastEnergy", shoot.energy.toString());
+        tag.putFloat("LastPower", shoot.power);
+        tag.putFloat("LastInaccuracy", shoot.inaccuracy);
+        tag.putFloat("LastHoming", shoot.homing);
 
         if(!player.getAbilities().instabuild)
             energyContainer.extract(shoot.energy, Action.EXECUTE, AutomationType.MANUAL);
@@ -201,7 +199,8 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
     }
     @Override
     public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        if(!(pEntity instanceof Player player)) return;
+        if(!(pEntity instanceof Player player))
+            return;
         //ItemProperties用.
         pStack.getOrCreateTag().putBoolean("Selected", pIsSelected);
 
@@ -238,6 +237,7 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                             }
 
                             ArrowEntity arrow = new ArrowEntity(ModEntities.ARROW.get(), pLevel, player);
+                            arrow.setOwner(player);
                             arrow.setSub(true);
                             arrow.setPower(power);
                             arrow.setInaccuracy(inaccuracy);

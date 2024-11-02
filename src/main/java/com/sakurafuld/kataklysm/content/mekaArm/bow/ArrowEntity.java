@@ -6,7 +6,9 @@ import com.sakurafuld.kataklysm.network.mekaArm.ClientboundArrowVanish;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -14,6 +16,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -24,6 +27,7 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,10 +40,8 @@ import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static com.sakurafuld.kataklysm.Deets.*;
 
@@ -48,11 +50,12 @@ public class ArrowEntity extends AbstractArrow {
     private static final EntityDataAccessor<Float> DATA_INACCURACY = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> DATA_SUB = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> DATA_SUB_MULTIPLIER = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> DATA_HOMING = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.INT);
+
     private boolean piercing = false;
+    private long targetingStart = -1;
+    private Vec3 origin = null;
     private final List<Integer> PIERCED = new ArrayList<>();
-    private boolean homing = false;
-
-
 
     private boolean hasBeenShot = false;
     private boolean leftOwner = false;
@@ -69,6 +72,7 @@ public class ArrowEntity extends AbstractArrow {
     public ArrowEntity(EntityType<? extends AbstractArrow> pEntityType, Level pLevel, LivingEntity owner) {
         super(pEntityType, owner, pLevel);
         this.setBaseDamage(3f);
+        this.origin = new Vec3(owner.getX(), owner.getEyeY() - 0.1f, owner.getZ());
     }
 
     public float getPower(){
@@ -101,11 +105,11 @@ public class ArrowEntity extends AbstractArrow {
     public void setPiercing(boolean piercing){
         this.piercing = piercing;
     }
-    public boolean isHoming(){
-        return this.homing;
+    public int getHoming(){
+        return this.getEntityData().get(DATA_HOMING);
     }
-    public void setHoming(boolean homing){
-        this.homing = homing;
+    public void setHoming(int homing){
+        this.getEntityData().set(DATA_HOMING, homing);
     }
 
     @Override
@@ -119,33 +123,43 @@ public class ArrowEntity extends AbstractArrow {
         this.getEntityData().define(DATA_INACCURACY, 0f);
         this.getEntityData().define(DATA_SUB, false);
         this.getEntityData().define(DATA_SUB_MULTIPLIER, 1f);
+        this.getEntityData().define(DATA_HOMING, -1);
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag pCompound) {
-        super.addAdditionalSaveData(pCompound);
-        pCompound.putBoolean("Piercing", this.isPiercing());
-        pCompound.putIntArray("Pierced", this.PIERCED);
-        pCompound.putBoolean("Homing", this.isHoming());
-//        pCompound.putBoolean("Sub", this.isSub());
-        pCompound.putBoolean("HasBeenShot", this.hasBeenShot);
-        pCompound.putBoolean("LeftOwner", this.leftOwner);
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+
+        tag.putLong("TargetingStart", this.targetingStart);
+        if(this.origin != null)
+            tag.put("Origin", this.newDoubleList(origin.x(), origin.y(), origin.z()));
+        tag.putBoolean("Piercing", this.isPiercing());
+        tag.putIntArray("Pierced", this.PIERCED);
+
+        tag.putBoolean("HasBeenShot", this.hasBeenShot);
+        tag.putBoolean("LeftOwner", this.leftOwner);
         if (this.lastState != null) {
-            pCompound.put("LastState", NbtUtils.writeBlockState(this.lastState));
+            tag.put("LastState", NbtUtils.writeBlockState(this.lastState));
         }
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag pCompound) {
-        super.readAdditionalSaveData(pCompound);
-        this.setPiercing(pCompound.getBoolean("Piercing"));
-        this.PIERCED.addAll(Arrays.stream(pCompound.getIntArray("Pierced")).boxed().toList()) ;
-        this.setHoming(pCompound.getBoolean("Homing"));
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+//        this.targeting = tag.getBoolean("HomingTarget");
+        this.targetingStart = tag.getLong("TargetingStar");
+        if(tag.contains("Origin")) {
+            ListTag origin = tag.getList("Origin", Tag.TAG_DOUBLE);
+            this.origin = new Vec3(origin.getDouble(0), origin.getDouble(1), origin.getDouble(2));
+        }
+        this.setPiercing(tag.getBoolean("Piercing"));
+        this.PIERCED.addAll(Arrays.stream(tag.getIntArray("Pierced")).boxed().toList()) ;
+//        this.setHoming(pCompound.getFloat("Homing"));
 //        this.setSub(pCompound.getBoolean("Sub"));
-        this.hasBeenShot = pCompound.getBoolean("HasBeenShot");
-        this.leftOwner = pCompound.getBoolean("LeftOwner");
-        if (pCompound.contains("LastState", 10)) {
-            this.lastState = NbtUtils.readBlockState(pCompound.getCompound("LastState"));
+        this.hasBeenShot = tag.getBoolean("HasBeenShot");
+        this.leftOwner = tag.getBoolean("LeftOwner");
+        if (tag.contains("LastState", 10)) {
+            this.lastState = NbtUtils.readBlockState(tag.getCompound("LastState"));
         }
     }
 
@@ -156,6 +170,11 @@ public class ArrowEntity extends AbstractArrow {
 
     @Override
     public void tick() {
+        if(this.origin == null) {
+            LOG.debug("{}-NULLOrigin", side());
+            this.origin = this.position();
+        }
+
         if (!this.hasBeenShot) {
             this.gameEvent(GameEvent.PROJECTILE_SHOOT, this.getOwner(), this.blockPosition());
             this.hasBeenShot = true;
@@ -167,19 +186,20 @@ public class ArrowEntity extends AbstractArrow {
 
         super.baseTick();
 
-        boolean flag = this.isNoPhysics();
+        boolean noPhysic = this.isNoPhysics();
         Vec3 delta = this.getDeltaMovement();
+
         if (this.xRotO == 0.0F && this.yRotO == 0.0F) {
             double d0 = delta.horizontalDistance();
-            this.setYRot((float)(Mth.atan2(delta.x, delta.z) * (double)(180F / (float)Math.PI)));
-            this.setXRot((float)(Mth.atan2(delta.y, d0) * (double)(180F / (float)Math.PI)));
+            this.setYRot((float)(Mth.atan2(delta.x, delta.z) * (180 / Math.PI)));
+            this.setXRot((float)(Mth.atan2(delta.y, d0) * (180 / Math.PI)));
             this.yRotO = this.getYRot();
             this.xRotO = this.getXRot();
         }
 
         BlockPos pos = this.blockPosition();
         BlockState state = this.level.getBlockState(pos);
-        if (!state.isAir() && !flag) {
+        if (!state.isAir() && !noPhysic) {
             VoxelShape voxelshape = state.getCollisionShape(this.level, pos);
             if (!voxelshape.isEmpty()) {
                 Vec3 position = this.position();
@@ -201,7 +221,7 @@ public class ArrowEntity extends AbstractArrow {
             this.clearFire();
         }
 
-        if (this.inGround && !flag) {
+        if (this.inGround && !noPhysic) {
             if (this.lastState != state && this.shouldFall()) {
                 this.startFalling();
             } else if (!this.level.isClientSide) {
@@ -211,15 +231,88 @@ public class ArrowEntity extends AbstractArrow {
             ++this.inGroundTime;
         } else {
             this.inGroundTime = 0;
-            Vec3 vec32 = this.position();
-            Vec3 vec33 = vec32.add(delta);
-            HitResult hitresult = this.level.clip(new ClipContext(vec32, vec33, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+            Vec3 position = this.position();
+            Vec3 objective = position.add(delta);
+            boolean lerpMotion = true;
+
+            boolean homing = delta.length() >= 3 && !this.inGround && this.getHoming() > 0 && (this.targetingStart < 0 || (this.getLevel().getGameTime() - this.targetingStart) % this.getHoming() == 0);
+            if(side().isServer() && homing && !this.isRemoved()) {
+                int reach = 5;
+//                LOG.debug("{}-HomingDist={}", side(), this.getOwner().distanceToSqr(objective));
+                if(this.origin == null || this.origin.distanceToSqr(objective) > reach * reach) {
+                    LOG.debug("{}-HomingUnleashed", side());
+                    List<Entity> list = this.getLevel().getEntities(this, this.getBoundingBox().inflate(15 * this.getHoming()), this::canHitEntity);
+
+                    Vec3 reached = this.origin == null
+                            ? position : this.origin.distanceToSqr(position) <= reach * reach
+                            ? (position.add(delta.normalize().scale(reach))) : position;
+
+                    double scale = this.origin == null
+                            ? delta.length() : this.origin.distanceToSqr(position) <= reach * reach
+                            ? objective.subtract(reached).length() : delta.length();
+
+                    Stream<Entity> stream = this.getPierceLevel() < 0 ? list.stream() : list.stream()
+                            .filter(entity -> {
+                                HitResult hit = this.getLevel().clip(new ClipContext(reached, entity.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+                                LOG.debug("{}-HomingFilter={}", side(), hit.getType());
+                                return hit.getType() == HitResult.Type.MISS;
+                            });
+
+                    Optional<Entity> op = stream
+                            .min(Comparator.comparingDouble(entity -> {
+                                LOG.debug("{}-HomingMin", side());
+                                return this.distanceTo(entity);
+                            }));
+
+                    if(op.isPresent()) {
+                        this.targetingStart = this.getLevel().getGameTime();
+                        Entity target = op.get();
+                        Vec3 center = target.getBoundingBox().getCenter();
+                        Vec3 vector = center.subtract(reached).normalize();
+                        this.setDeltaMovement(vector.scale(delta.length()));
+                        delta = this.getDeltaMovement();
+                        position = reached;
+                        objective = reached.add(vector.scale(scale));
+                        lerpMotion = false;
+                        this.getLevel().playSound(null, position.x(), position.y(), position.z(), SoundEvents.GOAT_LONG_JUMP, SoundSource.NEUTRAL, 4, 2);
+//                        EntityHitResult result = this.findHitEntity(reached, reached.add(vector.scale(scale)));
+//                        if(result != null && result.getType() != HitResult.Type.MISS && !ForgeEventFactory.onProjectileImpact(this, result)) {
+//                            LOG.debug("{}-HomingStrike", side());
+//                            this.onHitEntity(result);
+//                            this.hasImpulse = true;
+//                        } else {
+//                            LOG.debug("{}-HomingSkip", side());
+//
+////                            ox = last.x();
+////                            oy = last.y();
+////                            oz = last.z();
+//                        }
+
+//                        dx = delta.x;
+//                        dy = delta.y;
+//                        dz = delta.z;
+//                        distance = delta.horizontalDistance();
+//
+//                        if (noPhysic) {
+//                            this.setYRot((float)(Mth.atan2(-dx, -dz) * (180 / Math.PI)));
+//                        } else {
+//                            this.setYRot((float)(Mth.atan2(dx, dz) * (180 / Math.PI)));
+//                        }
+//
+//                        this.setXRot((float)(Mth.atan2(dy, distance) * (180 / Math.PI)));
+//                        this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
+//                        this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
+                    }
+                }
+            }
+
+            HitResult hitresult = this.getLevel().clip(new ClipContext(position, objective, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
             if (hitresult.getType() != HitResult.Type.MISS) {
-                vec33 = hitresult.getLocation();
+                objective = hitresult.getLocation();
             }
 
             while(!this.isRemoved()) {
-                EntityHitResult entityhitresult = this.findHitEntity(vec32, vec33);
+                EntityHitResult entityhitresult = this.findHitEntity(position, objective);
                 if (entityhitresult != null) {
                     hitresult = entityhitresult;
                 }
@@ -233,7 +326,7 @@ public class ArrowEntity extends AbstractArrow {
                     }
                 }
 
-                if (hitresult != null && hitresult.getType() != HitResult.Type.MISS && !flag && !ForgeEventFactory.onProjectileImpact(this, hitresult)) {
+                if (hitresult != null && hitresult.getType() != HitResult.Type.MISS && !noPhysic && !ForgeEventFactory.onProjectileImpact(this, hitresult)) {
                     this.onHit(hitresult);
                     this.hasImpulse = true;
                 }
@@ -246,52 +339,57 @@ public class ArrowEntity extends AbstractArrow {
             }
 
             delta = this.getDeltaMovement();
-            double d5 = delta.x;
-            double d6 = delta.y;
-            double d1 = delta.z;
+            double dx = delta.x;
+            double dy = delta.y;
+            double dz = delta.z;
+            double distance = delta.horizontalDistance();
 
-            double d7 = this.getX() + d5;
-            double d2 = this.getY() + d6;
-            double d3 = this.getZ() + d1;
-            double d4 = delta.horizontalDistance();
-            if (flag) {
-                this.setYRot((float)(Mth.atan2(-d5, -d1) * (double)(180F / (float)Math.PI)));
+            if (noPhysic) {
+                this.setYRot((float)(Mth.atan2(-dx, -dz) * (180 / Math.PI)));
             } else {
-                this.setYRot((float)(Mth.atan2(d5, d1) * (double)(180F / (float)Math.PI)));
+                this.setYRot((float)(Mth.atan2(dx, dz) * (180 / Math.PI)));
             }
 
-            this.setXRot((float)(Mth.atan2(d6, d4) * (double)(180F / (float)Math.PI)));
-            this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
-            this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
+            this.setXRot((float)(Mth.atan2(dy, distance) * (180 / Math.PI)));
+            if(lerpMotion) {
+                this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
+                this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
+            }
+
+            objective = position.add(delta);
+            double ox = objective.x();
+            double oy = objective.y();
+            double oz = objective.z();
+
             float f = 0.99F;
             if (this.isInWater()) {
                 for(int j = 0; j < 4; ++j) {
-                    this.level.addParticle(ParticleTypes.BUBBLE, d7 - d5 * 0.25D, d2 - d6 * 0.25D, d3 - d1 * 0.25D, d5, d6, d1);
+                    this.level.addParticle(ParticleTypes.BUBBLE, ox - dx * 0.25D, oy - dy * 0.25D, oz - dz * 0.25D, dx, dy, dz);
                 }
                 f = this.getWaterInertia();
             }
 
+
             this.setDeltaMovement(delta.scale(f));
-            if (!this.isNoGravity() && !flag) {
-                Vec3 vec34 = this.getDeltaMovement();
-                this.setDeltaMovement(vec34.x, vec34.y - (double)0.05F, vec34.z);
+            if (!this.isNoGravity() && !noPhysic) {
+                Vec3 dm = this.getDeltaMovement();
+                this.setDeltaMovement(dm.x, dm.y - 0.05, dm.z);
             }
 
-            this.setPos(d7, d2, d3);
+
+
+            this.setPos(ox, oy, oz);
             this.checkInsideBlocks();
         }
-        if(this.inGroundTime >= (this.isSub() ? 5 : 40))
+        if(this.inGroundTime >= (this.isSub() ? 5 : 40)) {
+            LOG.debug("{}-InGround={}", side(), this.position());
             this.discard();
+        }
 
-        if(this.tickCount >= 400)
+        if(this.tickCount >= 300) {
+            LOG.debug("{}-Count={}", side(), this.position());
             this.discard();
-
-//        if(this.tickCount % 10 == 0) {
-//            LOG.debug("{}-PreDelta={}", side(), this.getDeltaMovement());
-//            double length = this.getDeltaMovement().length();
-//            Vec3 v = this.getDeltaMovement().normalize().scale(length);
-//            LOG.debug("{}-PostDelta={}", side(), v);
-//        }
+        }
     }
 
     @Override
@@ -304,6 +402,7 @@ public class ArrowEntity extends AbstractArrow {
     }
 
     private void startFalling() {
+        LOG.debug("{}-Falling={}", side(), this.position());
         this.discard();
     }
     private boolean checkLeftOwner() {
@@ -327,7 +426,7 @@ public class ArrowEntity extends AbstractArrow {
         Entity entity = null;
         Vec3 vec = null;
 
-        for(Entity entity1 : this.getLevel().getEntities(this, this.getBoundingBox().expandTowards(this.getDeltaMovement()).inflate(1.0D), this::canHitEntity)) {
+        for(Entity entity1 : this.getLevel().getEntities(this, this.getBoundingBox().expandTowards(pEndVec.subtract(pStartVec)).inflate(1.0D), this::canHitEntity)) {
             AABB aabb = entity1.getBoundingBox().inflate(0.3f);
             Optional<Vec3> optional = aabb.clip(pStartVec, pEndVec);
             if (optional.isPresent()) {
@@ -426,8 +525,8 @@ public class ArrowEntity extends AbstractArrow {
                 }
 
                 this.doPostHurtEffects(living);
-                if (living != owner && living instanceof Player && owner instanceof ServerPlayer && !this.isSilent()) {
-                    ((ServerPlayer)owner).connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.ARROW_HIT_PLAYER, 0.0F));
+                if (living != owner && living instanceof Player && owner instanceof ServerPlayer serverPlayer&& !this.isSilent()) {
+                    serverPlayer.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.ARROW_HIT_PLAYER, 0.0F));
                 }
             }
 
@@ -472,28 +571,21 @@ public class ArrowEntity extends AbstractArrow {
         return this.getPower() >= 2;
     }
 
-//    @Override
-//    public void setCritArrow(boolean pCritArrow) {}
-
-//    @Override
-//    public byte getPierceLevel() {
-//        return this.isPiercing() ? Byte.MAX_VALUE : 0;
-//    }
-//
-//    @Override
-//    public void setPierceLevel(byte pPierceLevel) {}
-
     @Override
     public boolean shotFromCrossbow() {
         return false;
     }
 
     @Override
-    protected boolean canHitEntity(Entity pTarget) {
+    protected boolean canHitEntity(@Nullable Entity pTarget) {
 //        LOG.info("{}-CanHit={}-ID={}", side(), pTarget.getDisplayName().getString(), pTarget.getId());
-        if (!pTarget.isSpectator() && pTarget.isAlive() && pTarget.isPickable() ) {
-            Entity entity = this.getOwner();
-            return (entity == null || this.leftOwner || !entity.isPassengerOfSameVehicle(pTarget)) && (this.PIERCED.isEmpty() || !this.PIERCED.contains(pTarget.getId()));
+        if(pTarget == null)
+            return false;
+        if (pTarget instanceof LivingEntity && !pTarget.isSpectator() && pTarget.isAlive() && pTarget.isPickable() ) {
+            Entity owner = this.getOwner();
+            if(pTarget instanceof Player targetP && owner instanceof Player ownerP && !ownerP.canHarmPlayer(targetP))
+                return false;
+            return (owner == null || (!owner.equals(pTarget) && !owner.isPassengerOfSameVehicle(pTarget))) && (this.PIERCED.isEmpty() || !this.PIERCED.contains(pTarget.getId()));
         } else {
             return false;
         }
