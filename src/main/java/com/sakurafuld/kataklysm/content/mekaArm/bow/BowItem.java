@@ -1,6 +1,5 @@
 package com.sakurafuld.kataklysm.content.mekaArm.bow;
 
-import com.google.common.collect.Lists;
 import com.sakurafuld.kataklysm.content.ModEntities;
 import com.sakurafuld.kataklysm.content.ModSounds;
 import com.sakurafuld.kataklysm.content.mekaArm.bow.modules.ModuleAimAdjustmentUnit;
@@ -74,6 +73,24 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
             this.homing = homing;
             this.piercing = piercing;
             this.cancel = power < 0.1;
+        }
+
+
+        public CompoundTag serialize() {
+            CompoundTag tag = new CompoundTag();
+            tag.putString("Energy", this.energy.toString());
+            tag.putFloat("Power", this.power);
+            tag.putFloat("Inaccuracy", this.inaccuracy);
+            tag.putInt("Homing", this.homing);
+            tag.putInt("Piercing", this.piercing);
+            return tag;
+        }
+
+        public static Shoot deserialize(CompoundTag tag) {
+            return new Shoot(FloatingLong.parseFloatingLong(tag.getString("Energy")),
+                    tag.getFloat("Power"), tag.getFloat("Inaccuracy"),
+                    tag.getInt("Homing"),
+                    tag.getInt("Piercing"));
         }
     }
 
@@ -160,10 +177,10 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                 * ブレ2/
                 * 貫通6Piercing
                 * ブロック貫通1Ghosting
-                * ホーミング４Homing
+                * ホーミング3Homing/
                 * 連射4Barrage/
                 * 追い撃ち3Ambush Shot
-                * 重力2Aerodynamics control
+                * 重力2Aerodynamics Control
                 * サブアローにも強化1
                 *
                 * */
@@ -188,10 +205,7 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         this.shoot(arrow, player);
 
         CompoundTag tag = pStack.getOrCreateTag();
-        tag.putString("LastEnergy", shoot.energy.toString());
-        tag.putFloat("LastPower", shoot.power);
-        tag.putFloat("LastInaccuracy", shoot.inaccuracy);
-        tag.putFloat("LastHoming", shoot.homing);
+        tag.put("Shoot", shoot.serialize());
 
         if(!player.getAbilities().instabuild)
             energyContainer.extract(shoot.energy, Action.EXECUTE, AutomationType.MANUAL);
@@ -207,7 +221,7 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         required(LogicalSide.SERVER).run(() -> {
             CompoundTag tag = pStack.getOrCreateTag();
             IEnergyContainer energyContainer = StorageUtils.getEnergyContainer(pStack, 0);
-            if(energyContainer != null && tag.contains("Subarrow")) {
+            if(energyContainer != null && tag.contains("Subarrow") && tag.contains("Shoot")) {
                 if (pIsSelected) {
 //                    LOG.debug("{}-ContainsSubarrow", side());
                     int count = tag.getInt("Subarrow");
@@ -215,7 +229,7 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                     tag.putInt("Subarrow", count - 1);
 
                     if (tag.getInt("Subarrow") <= 0) {
-                        LOG.debug("{}-RemoveLowerZERO", side());
+//                        LOG.debug("{}-RemoveLowerZERO", side());
                         tag.remove("Subarrow");
                     }
 
@@ -226,9 +240,10 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                                 198, 196,
                                 98 -> {
 //                            LOG.debug("{}-CountDown", side());
-                            FloatingLong energy = FloatingLong.parseFloatingLong(tag.getString("LastEnergy")).multiply(0.5);
-                            float power = (tag.getFloat("LastPower") * (count == 98 ? 1 : (float) 2 / 3));
-                            float inaccuracy = (tag.getFloat("LastInaccuracy"));
+                            Shoot shoot = Shoot.deserialize(tag.getCompound("Shoot"));
+                            FloatingLong energy = shoot.energy.multiply(0.5);
+                            float power = (shoot.power * (count == 98 ? 1 : (float) 2 / 3));
+                            float inaccuracy = shoot.inaccuracy;
 //                            energy = energy.multiply(power);
                             power *= player.getRandom().nextFloat(0.8f, 1.2f);
                             if (!player.getAbilities().instabuild && energyContainer.getEnergy().smallerThan(energy)) {
@@ -237,11 +252,10 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                             }
 
                             ArrowEntity arrow = new ArrowEntity(ModEntities.ARROW.get(), pLevel, player);
-                            arrow.setOwner(player);
                             arrow.setSub(true);
                             arrow.setPower(power);
                             arrow.setInaccuracy(inaccuracy);
-                            //0.2=7, 0.3=10, 0.4=13, 0.6=22
+                            arrow.setHoming(shoot.homing);
                             if (count >= 101) {
                                 arrow.setSubMultiplier((float) 1 / 2);
                             }
@@ -260,7 +274,6 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                             switch (count) {
                                 case 396, 294, 196, 98 -> {
 //                                    LOG.debug("{}-RemoveCountDowned", side());
-
                                     tag.remove("Subarrow");
                                 }
                             }

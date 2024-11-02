@@ -27,7 +27,6 @@ import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -170,10 +169,6 @@ public class ArrowEntity extends AbstractArrow {
 
     @Override
     public void tick() {
-        if(this.origin == null) {
-            LOG.debug("{}-NULLOrigin", side());
-            this.origin = this.position();
-        }
 
         if (!this.hasBeenShot) {
             this.gameEvent(GameEvent.PROJECTILE_SHOOT, this.getOwner(), this.blockPosition());
@@ -224,36 +219,34 @@ public class ArrowEntity extends AbstractArrow {
         if (this.inGround && !noPhysic) {
             if (this.lastState != state && this.shouldFall()) {
                 this.startFalling();
-            } else if (!this.level.isClientSide) {
-                this.tickDespawn();
             }
-
             ++this.inGroundTime;
+
         } else {
             this.inGroundTime = 0;
             Vec3 position = this.position();
             Vec3 objective = position.add(delta);
             boolean lerpMotion = true;
 
-            boolean homing = delta.length() >= 3 && !this.inGround && this.getHoming() > 0 && (this.targetingStart < 0 || (this.getLevel().getGameTime() - this.targetingStart) % this.getHoming() == 0);
+            boolean homing = delta.length() >= 2.5 && !this.inGround && this.getHoming() > 0 && (this.targetingStart < 0 || (this.getLevel().getGameTime() - this.targetingStart) % this.getHoming() == 0);
             if(side().isServer() && homing && !this.isRemoved()) {
                 int reach = 5;
 //                LOG.debug("{}-HomingDist={}", side(), this.getOwner().distanceToSqr(objective));
-                if(this.origin == null || this.origin.distanceToSqr(objective) > reach * reach) {
+                if(this.getOwner() == null || this.getOwner().distanceToSqr(position) > reach * reach) {
                     LOG.debug("{}-HomingUnleashed", side());
-                    List<Entity> list = this.getLevel().getEntities(this, this.getBoundingBox().inflate(15 * this.getHoming()), this::canHitEntity);
+                    List<Entity> list = this.getLevel().getEntities(this, this.getBoundingBox().inflate(15), this::canHitEntity);
 
-                    Vec3 reached = this.origin == null
-                            ? position : this.origin.distanceToSqr(position) <= reach * reach
-                            ? (position.add(delta.normalize().scale(reach))) : position;
+//                    Vec3 reached = this.getOwner() == null
+//                            ? position : this.getOwner().distanceToSqr(position) <= reach * reach
+//                            ? position/*(position.add(delta.normalize().scale(reach)))*/ : position;
+//
+//                    double scale = this.getOwner() == null
+//                            ? delta.length() : this.getOwner().distanceToSqr(position) <= reach * reach
+//                            ? delta.length()/*objective.subtract(reached).length()*/ : delta.length();
 
-                    double scale = this.origin == null
-                            ? delta.length() : this.origin.distanceToSqr(position) <= reach * reach
-                            ? objective.subtract(reached).length() : delta.length();
-
-                    Stream<Entity> stream = this.getPierceLevel() < 0 ? list.stream() : list.stream()
+                    Stream<Entity> stream = noPhysic ? list.stream() : list.stream()
                             .filter(entity -> {
-                                HitResult hit = this.getLevel().clip(new ClipContext(reached, entity.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+                                HitResult hit = this.getLevel().clip(new ClipContext(this.position(), entity.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
                                 LOG.debug("{}-HomingFilter={}", side(), hit.getType());
                                 return hit.getType() == HitResult.Type.MISS;
                             });
@@ -265,43 +258,21 @@ public class ArrowEntity extends AbstractArrow {
                             }));
 
                     if(op.isPresent()) {
-                        this.targetingStart = this.getLevel().getGameTime();
+                        if(this.targetingStart < 0)
+                            this.targetingStart = this.getLevel().getGameTime();
                         Entity target = op.get();
+                        LOG.debug("{}-target={}", side(), target.getDisplayName().getString());
                         Vec3 center = target.getBoundingBox().getCenter();
-                        Vec3 vector = center.subtract(reached).normalize();
-                        this.setDeltaMovement(vector.scale(delta.length()));
+                        Vec3 vector = center.subtract(position).normalize().scale(delta.length());
+                        this.setDeltaMovement(vector);
                         delta = this.getDeltaMovement();
-                        position = reached;
-                        objective = reached.add(vector.scale(scale));
+//                        position = reached;
+                        LOG.debug("{}-position={}", side(), position);
+                        objective = position.add(vector);
+                        LOG.debug("{}-objective={}", side(), objective);
+//                        LOG.debug("{}-vectorScale={}", side(), vector.scale(scale).length());
                         lerpMotion = false;
                         this.getLevel().playSound(null, position.x(), position.y(), position.z(), SoundEvents.GOAT_LONG_JUMP, SoundSource.NEUTRAL, 4, 2);
-//                        EntityHitResult result = this.findHitEntity(reached, reached.add(vector.scale(scale)));
-//                        if(result != null && result.getType() != HitResult.Type.MISS && !ForgeEventFactory.onProjectileImpact(this, result)) {
-//                            LOG.debug("{}-HomingStrike", side());
-//                            this.onHitEntity(result);
-//                            this.hasImpulse = true;
-//                        } else {
-//                            LOG.debug("{}-HomingSkip", side());
-//
-////                            ox = last.x();
-////                            oy = last.y();
-////                            oz = last.z();
-//                        }
-
-//                        dx = delta.x;
-//                        dy = delta.y;
-//                        dz = delta.z;
-//                        distance = delta.horizontalDistance();
-//
-//                        if (noPhysic) {
-//                            this.setYRot((float)(Mth.atan2(-dx, -dz) * (180 / Math.PI)));
-//                        } else {
-//                            this.setYRot((float)(Mth.atan2(dx, dz) * (180 / Math.PI)));
-//                        }
-//
-//                        this.setXRot((float)(Mth.atan2(dy, distance) * (180 / Math.PI)));
-//                        this.setXRot(lerpRotation(this.xRotO, this.getXRot()));
-//                        this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
                     }
                 }
             }
@@ -356,7 +327,7 @@ public class ArrowEntity extends AbstractArrow {
                 this.setYRot(lerpRotation(this.yRotO, this.getYRot()));
             }
 
-            objective = position.add(delta);
+//            objective = position.add(delta);
             double ox = objective.x();
             double oy = objective.y();
             double oz = objective.z();
@@ -364,7 +335,7 @@ public class ArrowEntity extends AbstractArrow {
             float f = 0.99F;
             if (this.isInWater()) {
                 for(int j = 0; j < 4; ++j) {
-                    this.level.addParticle(ParticleTypes.BUBBLE, ox - dx * 0.25D, oy - dy * 0.25D, oz - dz * 0.25D, dx, dy, dz);
+                    this.getLevel().addParticle(ParticleTypes.BUBBLE, ox - dx * 0.25D, oy - dy * 0.25D, oz - dz * 0.25D, dx, dy, dz);
                 }
                 f = this.getWaterInertia();
             }
@@ -381,15 +352,19 @@ public class ArrowEntity extends AbstractArrow {
             this.setPos(ox, oy, oz);
             this.checkInsideBlocks();
         }
-        if(this.inGroundTime >= (this.isSub() ? 5 : 40)) {
-            LOG.debug("{}-InGround={}", side(), this.position());
-            this.discard();
-        }
 
-        if(this.tickCount >= 300) {
-            LOG.debug("{}-Count={}", side(), this.position());
-            this.discard();
-        }
+        required(LogicalSide.SERVER).run(() -> {
+            if(this.inGroundTime >= (this.isSub() ? 5 : 40)) {
+                LOG.debug("{}-InGround={}", side(), this.position());
+                this.discardAt(this.position());
+            }
+
+            if(this.tickCount >= 300) {
+                LOG.debug("{}-Count={}", side(), this.position());
+                this.discardAt(this.position());
+            }
+        });
+
     }
 
     @Override
@@ -402,8 +377,10 @@ public class ArrowEntity extends AbstractArrow {
     }
 
     private void startFalling() {
-        LOG.debug("{}-Falling={}", side(), this.position());
-        this.discard();
+        required(LogicalSide.SERVER).run(() -> {
+            LOG.debug("{}-Falling={}", side(), this.position());
+            this.discardAt(this.position());
+        });
     }
     private boolean checkLeftOwner() {
         Entity entity = this.getOwner();
@@ -555,12 +532,12 @@ public class ArrowEntity extends AbstractArrow {
         this.invalidateCaps();
     }
 
-    private void playHitSound(){
+    private void playHitSound() {
         float pitch = (this.random.nextFloat() * 0.2F + 0.9F);
         this.playSound(SoundEvents.ARROW_HIT, 1.5F, pitch * 2f);
         this.playSound(SoundEvents.PISTON_EXTEND, 1F,  pitch * 2f);
     }
-    private void playVanish(Vec3 position, int count){
+    private void playVanish(Vec3 position, int count) {
         this.getLevel().playSound(null, position.x(), position.y(), position.z(), ModSounds.VANISH.get(), this.getSoundSource(), 1.5F, (this.random.nextFloat() * 0.2F + 0.9F) * 1.5f);
         required(LogicalSide.SERVER).run(() ->
                 PacketHandler.INSTANCE.send(PacketDistributor.DIMENSION.with(this.getLevel()::dimension), new ClientboundArrowVanish(position, count)));

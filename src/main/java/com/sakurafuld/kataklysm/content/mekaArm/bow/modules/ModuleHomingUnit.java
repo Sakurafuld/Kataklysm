@@ -23,7 +23,7 @@ public class ModuleHomingUnit implements ICustomModule<ModuleHomingUnit> {
 
     public enum Homing implements IHasTextComponent {
         NONE(-1, "None"),
-        LOW(20, "Low"),
+        LOW(40, "Low"),
         MEDIUM(10, "Medium"),
         HIGH(3, "High");
 
