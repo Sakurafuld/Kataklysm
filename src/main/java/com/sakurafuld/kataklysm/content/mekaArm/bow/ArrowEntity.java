@@ -14,6 +14,7 @@ import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -49,7 +50,9 @@ public class ArrowEntity extends AbstractArrow {
     private static final EntityDataAccessor<Float> DATA_INACCURACY = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> DATA_SUB = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> DATA_SUB_MULTIPLIER = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.FLOAT);
-    private static final EntityDataAccessor<Integer> DATA_HOMING = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_HOMING_FREQUENCY = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_HOMING_DISTANCE = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DATA_HOMING_BACK = SynchedEntityData.defineId(ArrowEntity.class, EntityDataSerializers.BOOLEAN);
 
     private boolean piercing = false;
     private long targetingStart = -1;
@@ -74,41 +77,53 @@ public class ArrowEntity extends AbstractArrow {
         this.origin = new Vec3(owner.getX(), owner.getEyeY() - 0.1f, owner.getZ());
     }
 
-    public float getPower(){
+    public float getPower() {
         return this.getEntityData().get(DATA_POWER);
     }
-    public void setPower(float power){
+    public void setPower(float power) {
         this.getEntityData().set(DATA_POWER, power);
     }
-    public float getInaccuracy(){
+    public float getInaccuracy() {
         return this.getEntityData().get(DATA_INACCURACY);
     }
-    public void setInaccuracy(float inaccuracy){
+    public void setInaccuracy(float inaccuracy) {
         this.getEntityData().set(DATA_INACCURACY, inaccuracy);
     }
-    public float getSubMultiplier(){
+    public float getSubMultiplier() {
         return this.getEntityData().get(DATA_SUB_MULTIPLIER);
     }
-    public void setSubMultiplier(float subMultiplier){
+    public void setSubMultiplier(float subMultiplier) {
         this.getEntityData().set(DATA_SUB_MULTIPLIER, subMultiplier);
     }
-    public boolean isSub(){
+    public boolean isSub() {
         return this.getEntityData().get(DATA_SUB);
     }
-    public void setSub(boolean sub){
+    public void setSub(boolean sub) {
         this.getEntityData().set(DATA_SUB, sub);
     }
-    public boolean isPiercing(){
+    public boolean isPiercing() {
         return this.piercing;
     }
-    public void setPiercing(boolean piercing){
+    public void setPiercing(boolean piercing) {
         this.piercing = piercing;
     }
-    public int getHoming(){
-        return this.getEntityData().get(DATA_HOMING);
+    public int getHomingFrequency() {
+        return this.getEntityData().get(DATA_HOMING_FREQUENCY);
     }
-    public void setHoming(int homing){
-        this.getEntityData().set(DATA_HOMING, homing);
+    public void setHomingFrequency(int homingFrequency) {
+        this.getEntityData().set(DATA_HOMING_FREQUENCY, homingFrequency);
+    }
+    public int getHomingDistance() {
+        return this.getEntityData().get(DATA_HOMING_DISTANCE);
+    }
+    public void setHomingDistance(int homingDistance) {
+        this.getEntityData().set(DATA_HOMING_DISTANCE, homingDistance);
+    }
+    public boolean isHomingBack() {
+        return this.getEntityData().get(DATA_HOMING_BACK);
+    }
+    public void setHomingBack(boolean homingBack) {
+        this.getEntityData().set(DATA_HOMING_BACK, homingBack);
     }
 
     @Override
@@ -122,7 +137,9 @@ public class ArrowEntity extends AbstractArrow {
         this.getEntityData().define(DATA_INACCURACY, 0f);
         this.getEntityData().define(DATA_SUB, false);
         this.getEntityData().define(DATA_SUB_MULTIPLIER, 1f);
-        this.getEntityData().define(DATA_HOMING, -1);
+        this.getEntityData().define(DATA_HOMING_FREQUENCY, -1);
+        this.getEntityData().define(DATA_HOMING_DISTANCE, 0);
+        this.getEntityData().define(DATA_HOMING_BACK, false);
     }
 
     @Override
@@ -224,17 +241,18 @@ public class ArrowEntity extends AbstractArrow {
 
         } else {
             this.inGroundTime = 0;
+            Entity owner = this.getOwner();
             Vec3 position = this.position();
             Vec3 objective = position.add(delta);
             boolean lerpMotion = true;
 
-            boolean homing = delta.length() >= 2.5 && !this.inGround && this.getHoming() > 0 && (this.targetingStart < 0 || (this.getLevel().getGameTime() - this.targetingStart) % this.getHoming() == 0);
+            boolean homing = this.getPower() * 3 >= 3 && delta.length() >= 0.5 && !this.inGround && this.getHomingFrequency() > 0 && (this.targetingStart < 0 || (this.getLevel().getGameTime() - this.targetingStart) % this.getHomingFrequency() == 0);
             if(side().isServer() && homing && !this.isRemoved()) {
                 int reach = 5;
 //                LOG.debug("{}-HomingDist={}", side(), this.getOwner().distanceToSqr(objective));
-                if(this.getOwner() == null || this.getOwner().distanceToSqr(position) > reach * reach) {
+                if(owner == null || owner.distanceToSqr(position) > reach * reach) {
                     LOG.debug("{}-HomingUnleashed", side());
-                    List<Entity> list = this.getLevel().getEntities(this, this.getBoundingBox().inflate(15), this::canHitEntity);
+                    List<Entity> list = this.getLevel().getEntities(this, this.getBoundingBox().inflate(this.getHomingDistance()), this::canHitEntity);
 
 //                    Vec3 reached = this.getOwner() == null
 //                            ? position : this.getOwner().distanceToSqr(position) <= reach * reach
@@ -244,18 +262,22 @@ public class ArrowEntity extends AbstractArrow {
 //                            ? delta.length() : this.getOwner().distanceToSqr(position) <= reach * reach
 //                            ? delta.length()/*objective.subtract(reached).length()*/ : delta.length();
 
-                    Stream<Entity> stream = noPhysic ? list.stream() : list.stream()
-                            .filter(entity -> {
-                                HitResult hit = this.getLevel().clip(new ClipContext(this.position(), entity.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
-                                LOG.debug("{}-HomingFilter={}", side(), hit.getType());
-                                return hit.getType() == HitResult.Type.MISS;
-                            });
+                    Stream<Entity> stream = noPhysic ? list.stream() : list.stream().filter(entity -> {
+                        HitResult hit = this.getLevel().clip(new ClipContext(this.position(), entity.getBoundingBox().getCenter(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+//                        LOG.debug("{}-HomingFilter={}", side(), hit.getType());
+                        return hit.getType() == HitResult.Type.MISS;
+                    });
 
-                    Optional<Entity> op = stream
-                            .min(Comparator.comparingDouble(entity -> {
-                                LOG.debug("{}-HomingMin", side());
-                                return this.distanceTo(entity);
-                            }));
+                    stream = owner == null || this.isHomingBack() ? stream : stream.filter(entity -> {
+                        Vec3 vector = entity.getBoundingBox().getCenter().subtract(owner.getEyePosition().add(0, 0.5, 0)).normalize();
+                        double angle = Math.acos(owner.getViewVector(1).normalize().dot(vector));
+                        return angle < Math.toRadians(70);
+                    });
+
+                    Optional<Entity> op = stream.min(Comparator.comparingDouble(entity -> {
+                        LOG.debug("{}-HomingMin", side());
+                        return this.distanceTo(entity);
+                    }));
 
                     if(op.isPresent()) {
                         if(this.targetingStart < 0)
@@ -273,6 +295,8 @@ public class ArrowEntity extends AbstractArrow {
 //                        LOG.debug("{}-vectorScale={}", side(), vector.scale(scale).length());
                         lerpMotion = false;
                         this.getLevel().playSound(null, position.x(), position.y(), position.z(), SoundEvents.GOAT_LONG_JUMP, SoundSource.NEUTRAL, 4, 2);
+                        Vec3 normalized = delta.normalize();
+                        ((ServerLevel) this.getLevel()).sendParticles(ParticleTypes.CRIT, position.x(), position.y(), position.z(), 0, -normalized.x(), -normalized.y(), -normalized.z(), 2);
                     }
                 }
             }
@@ -290,7 +314,7 @@ public class ArrowEntity extends AbstractArrow {
 
                 if (hitresult instanceof EntityHitResult && hitresult.getType() != HitResult.Type.MISS) {
                     Entity target = ((EntityHitResult)hitresult).getEntity();
-                    Entity owner = this.getOwner();
+//                    Entity owner = this.getOwner();
                     if (target instanceof Player && owner instanceof Player && !((Player)owner).canHarmPlayer((Player)target)) {
                         hitresult = null;
                         entityhitresult = null;

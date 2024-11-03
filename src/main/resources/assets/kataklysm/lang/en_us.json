@@ -16,18 +16,18 @@
 
   "module.kataklysm.barrage": "Subarrow Count",
   "module.kataklysm.barrage_unit": "Barrage Unit",
-  "description.kataklysm.barrage_unit": "Multishot with Subarrows",
-  "module.kataklysm.barrage_overlay": "Subarrow:",
+  "description.kataklysm.barrage_unit": "Multishot with SubArrows",
+  "module.kataklysm.barrage_overlay": "SubArrow:",
 
-  "module.kataklysm.homing": "Homing Strength",
+  "module.kataklysm.homing_frequency": "Homing Frequency",
+  "module.kataklysm.homing_distance": "Homing Distance",
+  "module.kataklysm.homing_back": "Allows homing to rear targets",
   "module.kataklysm.homing_unit": "Homing Unit",
   "description.kataklysm.homing_unit": "Arrows homing nearby enemies",
 
-  "block.kataklysm.well": "Well of Singularities",
   "block.kataklysm.anchor": "Discorder",
   "block.kataklysm.solar": "Miniature Sunshine",
   "block.kataklysm.oneness": "Hopper Oneness",
-
 
   "entity.kataklysm.arrow": "Meka Arrow",
 
@@ -38,6 +38,7 @@
 
   "kataklysm.page.solar": "$(item)The miniature sunshine$(0) is a amulet that brings daylight into the world. When $(thing)Mana$(0) is supplied to this block in a $(thing)Mana Burst$(0) or a $(thing)Spark$(0), $(item)Blocks$(0) and $(item)Entities$(0) throughout the chunk will ignore the current time, $(thing)Dimension$(0), and begin to behave as if\n it were daytime now. Furthermore, the corresponding objects, such as some blocks in the $(#00aaee)Mekanism$(0), will perform at a stronger capability than during daytime.",
   "kataklysm.page.solar.crafting": "What if there are two in the same chunk? $(br)$(#ff0000)IT IS TRULY AN ART!",
+
 
   "info.mekanism.jei.module_installation" : "Using a Modification Station, modules can be installed on the various MekaSuit pieces, Meka-Tool and on the MekaArms."
 }

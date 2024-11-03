@@ -20,11 +20,12 @@
   "description.kataklysm.barrage_unit": "発射時に追加でサブアローを撃ち出します",
   "module.kataklysm.barrage_overlay": "サブアロー:",
 
-  "module.kataklysm.homing": "追尾の強さ",
+  "module.kataklysm.homing_frequency": "追尾の頻度",
+  "module.kataklysm.homing_distance": "追尾の範囲",
+  "module.kataklysm.homing_back": "後方のターゲットを追尾するか",
   "module.kataklysm.homing_unit": "標的追尾ユニット",
   "description.kataklysm.homing_unit": "矢が近くの標的に追尾するようになります",
 
-  "block.kataklysm.well": "特異点の井戸",
   "block.kataklysm.anchor": "ディスコーダー",
   "block.kataklysm.solar": "日当たりの核",
   "block.kataklysm.oneness": "ホッパーワンネス",
@@ -37,7 +38,8 @@
   "chat.kataklysm.anchor.not_enough_space": "§4テレポートに必要なスペースが足りません",
 
   "kataklysm.page.solar": "$(item)日当たりの核$(0)は、世界に昼を持ち出すお守りです。このブロックは$(thing)マナバースト$(0)や$(thing)スパーク$(0)によって$(thing)マナ$(0)が供給されると、そのチャンク全体の$(item)ブロック$(0)や$(item)エンティティ$(0)が、まるで今が昼間であるかのようにふるまい始めます。さらに、$(#00aaee)メカニズム$(0)の一部のブロックなど、対応しているものは昼間時よりも強い能力を発揮します。",
-  "kataklysm.page.solar.crafting": "おなじチャンクに2つあるとどうなるでしょう?$(br)$(#ff0000)それはまさに芸術だ！",
+  "kataklysm.page.solar.crafting": "おなじチャンクに2つあるとどうなるでしょう?$(br)$(#ff0000)それはまさしく芸術である！",
+
 
   "info.mekanism.jei.module_installation" : "改造ステーションを使用することで、MekaSuitやMeka-Tool、MekaArmにモジュールを取り付けられます。"
 }

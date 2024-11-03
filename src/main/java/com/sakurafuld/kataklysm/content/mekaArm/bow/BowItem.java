@@ -58,39 +58,56 @@ import java.util.function.Consumer;
 import static com.sakurafuld.kataklysm.Deets.*;
 
 public class BowItem extends ItemEnergized implements IModuleContainerItem, IModeItem {
-    private static class Shoot {
+    public static class Shoot {
         private FloatingLong energy;
         private float power;
         private float inaccuracy;
-        private int homing;
-        private int piercing;
+        private int homingFrequency = -1;
+        private int homingDistance = 0;
+        private boolean homingBack = false;
+        private int piercing = 0;
         private boolean cancel;
 
-        public Shoot(FloatingLong energy, float power, float inaccuracy, int homing, int piercing) {
+        public Shoot(FloatingLong energy, float power, float inaccuracy, int homingFrequency, int homingDistance, boolean homingBack, int piercing) {
             this.energy = energy;
             this.power = power;
             this.inaccuracy = inaccuracy;
-            this.homing = homing;
+            this.homingFrequency = homingFrequency;
+            this.homingDistance = homingDistance;
+            this.homingBack = homingBack;
             this.piercing = piercing;
             this.cancel = power < 0.1;
         }
+        public Shoot() {}
 
+        private void setAbilities(ArrowEntity arrow) {
+            arrow.setHomingFrequency(this.homingFrequency);
+            arrow.setHomingDistance(this.homingDistance);
+            arrow.setHomingBack(this.homingBack);
+        }
 
         public CompoundTag serialize() {
             CompoundTag tag = new CompoundTag();
             tag.putString("Energy", this.energy.toString());
             tag.putFloat("Power", this.power);
             tag.putFloat("Inaccuracy", this.inaccuracy);
-            tag.putInt("Homing", this.homing);
+            tag.putInt("HomingFrequency", this.homingFrequency);
+            tag.putInt("HomingDistance", this.homingDistance);
+            tag.putBoolean("HomingBack", this.homingBack);
             tag.putInt("Piercing", this.piercing);
             return tag;
         }
 
         public static Shoot deserialize(CompoundTag tag) {
-            return new Shoot(FloatingLong.parseFloatingLong(tag.getString("Energy")),
-                    tag.getFloat("Power"), tag.getFloat("Inaccuracy"),
-                    tag.getInt("Homing"),
-                    tag.getInt("Piercing"));
+            return new Shoot(
+                    FloatingLong.parseFloatingLong(tag.getString("Energy")),
+                    tag.getFloat("Power"),
+                    tag.getFloat("Inaccuracy"),
+                    tag.getInt("HomingFrequency"),
+                    tag.getInt("HomingDistance"),
+                    tag.getBoolean("HomingBack"),
+                    tag.getInt("Piercing")
+            );
         }
     }
 
@@ -158,8 +175,8 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                         shooters.set(7, shoot -> {
                             LOG.debug("{}-Barrage", side());
                             required(LogicalSide.SERVER).run(() -> {
-                                if(!shoot.cancel && !pStack.getOrCreateTag().contains("Subarrow")) {
-                                    pStack.getOrCreateTag().putInt("Subarrow", barrage.getCount() * 100);
+                                if(!shoot.cancel && !pStack.getOrCreateTag().contains("SubArrow")) {
+                                    pStack.getOrCreateTag().putInt("SubArrow", barrage.getCount() * 100);
                                 }
                             });
                         });
@@ -167,8 +184,14 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                 }
                 if(instance instanceof ModuleHomingUnit homing) {
                     shooters.set(2, shoot -> {
-                        LOG.debug("{}-Homing={}", side(), homing.getHoming());
-                        shoot.homing = homing.getHoming();
+                        LOG.debug("{}-Homing={}", side(), homing.getFrequency());
+                        shoot.homingFrequency = homing.getFrequency();
+                        shoot.homingDistance = homing.getDistance();
+                        shoot.homingBack = homing.isBack();
+                        if(!shoot.cancel && shoot.power * 3 >= 3) {
+                            player.crit(player);
+                            player.playSound(SoundEvents.PLAYER_ATTACK_CRIT, 1, 3);
+                        }
                     });
                 }
                 /*
@@ -180,14 +203,17 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                 * ホーミング3Homing/
                 * 連射4Barrage/
                 * 追い撃ち3Ambush Shot
-                * 重力2Aerodynamics Control
+                * 抗力制御2Drag Control
                 * サブアローにも強化1
                 *
                 * */
             }
         }
 
-        Shoot shoot = new Shoot(this.getShootRate(), this.getPowerForTime(this.getUseDuration(pStack) - pTimeCharged), 1, 0, 0);
+        Shoot shoot = new Shoot();
+        shoot.energy = this.getShootRate();
+        shoot.power = this.getPowerForTime(this.getUseDuration(pStack) - pTimeCharged);
+        shoot.inaccuracy = 1;
 
         for(Consumer<Shoot> shooter : shooters) {
             shooter.accept(shoot);
@@ -200,12 +226,12 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         ArrowEntity arrow = new ArrowEntity(ModEntities.ARROW.get(), pLevel, player);
         arrow.setPower(shoot.power);
         arrow.setInaccuracy(shoot.inaccuracy);
-        arrow.setHoming(shoot.homing);
+
+        shoot.setAbilities(arrow);
 
         this.shoot(arrow, player);
 
-        CompoundTag tag = pStack.getOrCreateTag();
-        tag.put("Shoot", shoot.serialize());
+        pStack.getOrCreateTag().put("Shoot", shoot.serialize());
 
         if(!player.getAbilities().instabuild)
             energyContainer.extract(shoot.energy, Action.EXECUTE, AutomationType.MANUAL);
@@ -221,41 +247,55 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         required(LogicalSide.SERVER).run(() -> {
             CompoundTag tag = pStack.getOrCreateTag();
             IEnergyContainer energyContainer = StorageUtils.getEnergyContainer(pStack, 0);
-            if(energyContainer != null && tag.contains("Subarrow") && tag.contains("Shoot")) {
+            if(energyContainer != null && tag.contains("SubArrow") && tag.contains("Shoot")) {
                 if (pIsSelected) {
-//                    LOG.debug("{}-ContainsSubarrow", side());
-                    int count = tag.getInt("Subarrow");
+//                    LOG.debug("{}-ContainsSubArrow", side());
+                    int count = tag.getInt("SubArrow");
 
-                    tag.putInt("Subarrow", count - 1);
+                    tag.putInt("SubArrow", count - 1);
 
-                    if (tag.getInt("Subarrow") <= 0) {
+                    if (tag.getInt("SubArrow") <= 0) {
 //                        LOG.debug("{}-RemoveLowerZERO", side());
-                        tag.remove("Subarrow");
+                        tag.remove("SubArrow");
                     }
 
 
                     switch (count) {
-                        case 399, 398, 397, 396,
+                        case
+                                399, 398, 397, 396,
                                 298, 296, 294,
                                 198, 196,
                                 98 -> {
+                            switch (count) {
+                            case 396, 294, 196, 98 -> {
+//                                    LOG.debug("{}-RemoveCountDowned", side());
+                                tag.remove("SubArrow");
+                            }
+                        }
 //                            LOG.debug("{}-CountDown", side());
                             Shoot shoot = Shoot.deserialize(tag.getCompound("Shoot"));
+
                             FloatingLong energy = shoot.energy.multiply(0.5);
-                            float power = (shoot.power * (count == 98 ? 1 : (float) 2 / 3));
-                            float inaccuracy = shoot.inaccuracy;
-//                            energy = energy.multiply(power);
-                            power *= player.getRandom().nextFloat(0.8f, 1.2f);
                             if (!player.getAbilities().instabuild && energyContainer.getEnergy().smallerThan(energy)) {
                                 LOG.debug("{}-ReturnSmallerEnergy={}", side(), energy);
                                 return;
                             }
 
+                            float power = (shoot.power * (count == 98 ? 1 : (float) 2 / 3));
+                            power *= player.getRandom().nextFloat(0.8f, 1.2f);
+
+                            float inaccuracy = shoot.inaccuracy;
+//                            energy = energy.multiply(power);
+
                             ArrowEntity arrow = new ArrowEntity(ModEntities.ARROW.get(), pLevel, player);
                             arrow.setSub(true);
+
                             arrow.setPower(power);
                             arrow.setInaccuracy(inaccuracy);
-                            arrow.setHoming(shoot.homing);
+
+//                            shoot.set(arrow);
+//                            arrow.setHomingFrequency(shoot.homingFrequency);
+
                             if (count >= 101) {
                                 arrow.setSubMultiplier((float) 1 / 2);
                             }
@@ -271,17 +311,12 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
                             if (!player.getAbilities().instabuild)
                                 energyContainer.extract(energy, Action.EXECUTE, AutomationType.MANUAL);
 
-                            switch (count) {
-                                case 396, 294, 196, 98 -> {
-//                                    LOG.debug("{}-RemoveCountDowned", side());
-                                    tag.remove("Subarrow");
-                                }
-                            }
+
                         }
                     }
                 } else {
 //                    LOG.debug("{}-RemoveNonSelected", side());
-                    tag.remove("Subarrow");
+                    tag.remove("SubArrow");
                 }
             }
         });
@@ -295,7 +330,7 @@ public class BowItem extends ItemEnergized implements IModuleContainerItem, IMod
         player.getLevel().addFreshEntity(arrow);
         required(LogicalSide.SERVER).run(() -> {
             float pitch = (player.getRandom().nextFloat() * 0.2F + 0.9F);
-            if(arrow.getPower() < 2 || arrow.isSub())
+            if(arrow.getPower() * 3 < 6 || arrow.isSub())
                 player.getLevel().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1f, 3F / pitch);
             else player.getLevel().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.CHARGE_SHOOT.get(), SoundSource.PLAYERS, 1f, 3F / pitch);
             player.getLevel().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GOAT_LONG_JUMP, SoundSource.PLAYERS, 1f, 1.5F / pitch);
